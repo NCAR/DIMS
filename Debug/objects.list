@@ -1,0 +1,7 @@
+"./Appl/AppTasks.o"
+"./Appl/D_XCAM.o"
+"./Appl/main.o"
+"./Drivers/Others/EEPROM_emul.o"
+"./Middlewares/ESTTC.o"
+"./Middlewares/MCU_Init.o"
+"./startup/startup_stm32f427xx.o"

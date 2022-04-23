@@ -1,0 +1,13 @@
+ESTTC.c:207:6:ESTTC_InitTask	40	static
+ESTTC.c:260:13:ESTTC_UART_TASK	664	static
+ESTTC.c:341:6:ESTTC_CMD_CRC_Print_string	24	static
+ESTTC.c:365:6:ESTTC_CMD_CRC_Print_raw_data	32	static
+ESTTC.c:391:6:ESTTC_PrintVersion	24	static
+ESTTC.c:415:16:ESTTC_ProcessData	240	static,ignoring_inline_asm
+ESTTC.c:2950:12:ESTTC_getchar	24	static,ignoring_inline_asm
+ESTTC.c:2977:12:getbyte	24	static
+ESTTC.c:3001:17:GetPhrase	32	static
+ESTTC.c:3035:16:HexToBin	24	static
+ESTTC.c:3058:17:ESTTC_GetCmdLength	24	static
+ESTTC.c:3156:17:ESTTC_ExtractCRC	40	static
+ESTTC.c:3189:12:ESTTC_CheckDate	32	static

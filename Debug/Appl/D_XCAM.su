@@ -1,0 +1,17 @@
+D_XCAM.c:13:6:D_XCAM_Example	552	static
+D_XCAM.c:79:9:D_XCAM_Init	8	static
+D_XCAM.c:95:10:D_XCAM_AnalyzeStatus	32	static
+D_XCAM.c:120:9:D_XCAM_GetStatus	24	static
+D_XCAM.c:151:9:D_XCAM_GetImageSPI	24	static
+D_XCAM.c:188:9:D_XCAM_GetImageI2C	24	static
+D_XCAM.c:208:9:D_XCAM_SendInitCommand	8	static
+D_XCAM.c:213:9:D_XCAM_EnableImagingMode	8	static
+D_XCAM.c:218:9:D_XCAM_SendInitOrUpdate	104	static
+D_XCAM.c:280:9:D_XCAM_SetParameter	32	static
+D_XCAM.c:306:6:D_XCAM_SetCRC	24	static
+D_XCAM.c:315:6:D_XCAM_ValidateCRC	24	static
+D_XCAM.c:330:10:D_XCAM_crc16	552	static
+D_XCAM.c:382:9:D_XCAM_transmit	32	static
+D_XCAM.c:398:9:D_XCAM_receive	40	static
+D_XCAM.c:442:6:D_XCAM_WaitSeconds	24	static
+D_XCAM.c:460:6:D_XCAM_PrintACKOrResponse	24	static
