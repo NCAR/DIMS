@@ -991,10 +991,10 @@ void D_XCAM_PrintACKOrResponse(uint8_t *buffer, size_t len)
   else
   {
     #ifdef DEBUG
-      fprintf(PAYLOAD, "Response: 0x");
-      for (i=0; i<len; i++)
-          fprintf(PAYLOAD, "%02x ", buffer[i]);
-      fprintf(PAYLOAD, "\n\r");
+      //fprintf(PAYLOAD, "Response: 0x");
+      //for (i=0; i<len; i++)
+          //fprintf(PAYLOAD, "%02x ", buffer[i]);
+      //fprintf(PAYLOAD, "\n\r");
     #endif
   }
 }

@@ -1,5 +1,5 @@
 #include "RunTime.h"
-
+uint16_t fileIterator = 0;
 
 /******************************************************************************
  * @brief : This Will Run the our Desired Initialization of the XCAM
@@ -134,20 +134,25 @@ uint8_t D_XCAM_GetEntireImageI2C(uint8_t *buffer){
     D_XCAM_GetStatus(status);
     D_XCAM_AnalyzeStatus(status, &packetsRemaining);
     uint16_t i = 0;
-    //const char Image_FileName[10]= "00000.raw";
-    //const char Header_FileName[10]= "00000.txt";
+
+    //Dumb Way To do this But Will work For now
     const char Image_FileName[10];
     const char Header_FileName[10];
-    get_next_image_id(&Image_FileName[0], &Header_FileName[0]);
+    sprintf(Image_FileName, "%05d.raw", fileIterator);
+    sprintf(Header_FileName, "%05d.txt", fileIterator);
+
+    //const char Image_FileName[10];
+    //const char Header_FileName[10];
+
+    //get_next_image_id(&Image_FileName[0], &Header_FileName[0]);
 
     //get_next_image_id(Image_FileName, Header_FileName);
     //Image_FileName =
-    //Header_FileName ="00000.txt";
     SD_Make_File(Image_FileName);
     SD_Make_File(Header_FileName);
     
     //fresult = f_open(&fid, Image_FileName,FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA_OPEN_EXISTING);
-    
+
     while(packetsRemaining>0){
         D_XCAM_GetImageSPI(&ImagePacket[0]);
 
@@ -155,9 +160,9 @@ uint8_t D_XCAM_GetEntireImageI2C(uint8_t *buffer){
         SD_Append_Data_File(Image_FileName, ImagePacket, sizeof(ImagePacket));
         D_XCAM_GetStatus(status);
         D_XCAM_AnalyzeStatus(status, &packetsRemaining);
-        SD_Append_String_File(Header_FileName, status, sizeof(ImagePacket));
+        SD_Append_String_File(Header_FileName, status, sizeof(status));
 
-        print("Packet Remaining: ");
+
         //print(("%d\n\r" , packetsRemaining));
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
     }
@@ -175,9 +180,9 @@ void main_imaging_loop(void){
     uint8_t len = 4;
     uint16_t Exposures[4];
     Exposures[0] = 0;//Set Exposure to Auto
-    Exposures[1] = 63;
+    Exposures[1] = 1; //in units of 63uS
     Exposures[2] = 30;
-    Exposures[3] = 120;
+    Exposures[3] = 4000;
 
     uint8_t i = 0;
     
@@ -260,7 +265,13 @@ void main_imaging_loop(void){
     // 11) The payload data packets waiting will be incremented as the payload returns to standby, to reflect the image packets waiting in the payload memory.
     // 12) Provided the default parameters are still loaded, the data packets waiting will contain an uncompressed thumbnail image and a compressed, unwindowed full image.
     // 13) Data can now be downloaded by the platform. Both I2C download commands will be treated identically by the payload.
+
+        char buffer[50];
+        sprintf(buffer, "Writing Exposure: %d", Exposures[i]);
+        print(buffer);
         D_XCAM_GetEntireImageI2C(PayloadI2C);
+        fileIterator++;
+
        // Write_Image_To_SD(PayloadI2C, 260);
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         

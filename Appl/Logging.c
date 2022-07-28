@@ -17,7 +17,7 @@ bool HouseKeeping_File_Created = false;
  */
 uint8_t Setup_SD(void){
     //Create a fatfs File System
-    const char baseDir[] = "/";
+
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 //    if(SD_FileSystem_Create()){
 //        print("Couldn't create file system\r\n");
@@ -26,15 +26,16 @@ uint8_t Setup_SD(void){
 //
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
-
+//TODO Need to Get this working
     //find a uniq id for the HK data
-    if(get_next_housekeeping_file_id(&HouseKeepingName[0])){
-        print("Couldn't get a unique ID for the HK file\r\n");
-        return 2;
-    }
+//    if(get_next_housekeeping_file_id(&HouseKeepingName[0])){
+//        print("Couldn't get a unique ID for the HK file\r\n");
+//        return 2;
+//    }
     
     //Make the Housekeeing File
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+    strcpy(HouseKeepingName,"HK.txt");
     if(Make_HouseKeeping(HouseKeepingName)){
         //if DEBUG is defined print message to terminal
         print("Couldn't make HK file\r\n");
@@ -98,7 +99,7 @@ uint8_t print(const char *String){
 void Write_To_HK(const char *String){
     //Prefix date Time to String
     const char DateTime[100];
-    get_dateString(&DateTime);
+    get_dateString(&DateTime[0]);
     strcat(DateTime, ": ");
     strcat(DateTime, String);
     strcat(DateTime, "\r\n");

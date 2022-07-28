@@ -32,7 +32,7 @@ uint8_t SD_Make_File(const char *FileName){
     }
 
     //Open file for writing (Create)
-    FileName = "HK.txt";
+
     res = f_open(&SDFile, FileName, FA_OPEN_ALWAYS | FA_WRITE);
     if (res == FR_NO_PATH){
         BuildPath(FileName);
@@ -357,7 +357,7 @@ uint8_t SD_GetFiles(FILINFO *fnoList){
     return 2;
   }
   //TODO -- Software Freezing here unsure Why
-  f_opendir(&dir,'/');
+  res=f_opendir(&dir,"/");
   uint16_t i = 0;
   do{
      res = f_readdir(&dir, &fno);
