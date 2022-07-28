@@ -18,7 +18,7 @@ void Recovery_State_Busy(void);
 void Write_Image_To_SD(uint8_t *data, uint8_t len);
 void Recovery_Tree(HAL_StatusTypeDef ret);
 void Recovery_State_Busy(void);
-void Adjust_Exposure(uint16_t setting);
+void Adjust_Exposure(uint8_t setting);
 void D_XCAM_Example(void);
 uint8_t D_XCAM_Init(void);
 uint8_t D_XCAM_GetStatus(uint8_t *status);

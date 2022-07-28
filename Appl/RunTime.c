@@ -127,7 +127,7 @@ uint8_t Make_ImageHeader(const char *filename){
  * @param buffer : Pointer to the buffer
  * @return (1) if it did not transmit (2) issue with HAL (3) if it did not receive (0)everything Went Well
  ****************************************************************************/
-uint8_t D_XCAM_GetEntireImageI2C(uint8_t *buffer){
+uint8_t D_XCAM_GetEntireImageSPI(){
     uint8_t ImagePacket[260] = {0};
     uint8_t status[22] = {0};
     uint16_t packetsRemaining;
@@ -150,7 +150,9 @@ uint8_t D_XCAM_GetEntireImageI2C(uint8_t *buffer){
     //Image_FileName =
     SD_Make_File(Image_FileName);
     SD_Make_File(Header_FileName);
-    
+    char buffer[50];
+    sprintf(buffer, "Writing to: %s", Image_FileName);
+    print(buffer);
     //fresult = f_open(&fid, Image_FileName,FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA_OPEN_EXISTING);
 
     while(packetsRemaining>0){
@@ -161,7 +163,7 @@ uint8_t D_XCAM_GetEntireImageI2C(uint8_t *buffer){
         D_XCAM_GetStatus(status);
         D_XCAM_AnalyzeStatus(status, &packetsRemaining);
         SD_Append_String_File(Header_FileName, status, sizeof(status));
-
+        EPS_check(1,1);
 
         //print(("%d\n\r" , packetsRemaining));
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
@@ -178,11 +180,11 @@ void main_imaging_loop(void){
     
     //Exposure Settings
     uint8_t len = 4;
-    uint16_t Exposures[4];
+    uint8_t Exposures[4];
     Exposures[0] = 0;//Set Exposure to Auto
     Exposures[1] = 1; //in units of 63uS
     Exposures[2] = 30;
-    Exposures[3] = 4000;
+    Exposures[3] = 158;
 
     uint8_t i = 0;
     
@@ -267,9 +269,9 @@ void main_imaging_loop(void){
     // 13) Data can now be downloaded by the platform. Both I2C download commands will be treated identically by the payload.
 
         char buffer[50];
-        sprintf(buffer, "Writing Exposure: %d", Exposures[i]);
+        sprintf(buffer, "Writing Exposure: %i", Exposures[i]);
         print(buffer);
-        D_XCAM_GetEntireImageI2C(PayloadI2C);
+        D_XCAM_GetEntireImageSPI();
         fileIterator++;
 
        // Write_Image_To_SD(PayloadI2C, 260);

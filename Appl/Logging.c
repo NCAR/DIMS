@@ -104,7 +104,7 @@ void Write_To_HK(const char *String){
     strcat(DateTime, String);
     strcat(DateTime, "\r\n");
     //Write to File
-    if(SD_Append_String_File(HouseKeepingName, &DateTime, strlen(DateTime))){
+    if(SD_Append_String_File(HouseKeepingName, &DateTime[0], strlen(DateTime))){
         #ifdef DEBUG
             fprintf(PAYLOAD, "Couldn't write to HK file\r\n");
         #endif

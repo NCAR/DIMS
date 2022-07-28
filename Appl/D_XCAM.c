@@ -133,7 +133,7 @@ void XCAM_Recovery_Tree(uint8_t XCAM_Status){
   * @param  setting : Duration of Exposure in units of 157us Note: if set to '0' the camera will use Auto Exposure
   * @retval none
   */
-void Adjust_Exposure(uint16_t setting){
+void Adjust_Exposure(uint8_t setting){
     if(setting == 0){
         // set auto-exposure mode
         D_XCAM_SetParameter(XCAM_AUTOEXP, 1);
@@ -143,6 +143,7 @@ void Adjust_Exposure(uint16_t setting){
         //Set the Exposure Time
         D_XCAM_SetParameter(XCAM_INTTIME, setting);
         D_XCAM_SetParameter(XCAM_AUTOEXP, 0);
+
 
     }
     return;
