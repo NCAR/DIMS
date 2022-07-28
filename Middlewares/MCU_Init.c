@@ -296,14 +296,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
-////////
-  GPIO_InitStruct.Pin = GPIO_PIN_4 | GPIO_PIN_5;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
-
-
   GPIO_InitStruct.Pin = ACC1_EN_Pin|ACC2_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -491,11 +483,8 @@ void MX_I2C2_Init(void)
 void MX_I2C3_Init(void)
 {
 
-  // Adapted for XCAM by Alice Lecinski 20201013
-  // XCAM I2C is I2C3  hi2c3
   hi2c3.Instance = I2C3;
   hi2c3.Init.ClockSpeed = 400000;
-  hi2c3.Init.DutyCycle = I2C_DUTYCYCLE_16_9; // orig I2C_DUTYCYCLE_2;
   hi2c3.Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c3.Init.OwnAddress1 = 0;
   hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -581,32 +570,18 @@ void MX_SDIO_SD_Init(void)
 void MX_SPI1_Init(void)
 {
 
-  // Adapted for XCAM by Alice Lecinski 20201013
-  // XCAM SPI is SPI1  hspi1
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
-
-  hspi1.Init.Direction  = SPI_DIRECTION_2LINES;
-  //hspi1.Init.Direction  = SPI_DIRECTION_2LINES_RXONLY; results in BAD HAL return
-  //hspi1.Init.Direction  = SPI_DIRECTION_1LINE; results in 0xff in 0th byte
-  
-  //hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi1.Init.DataSize   = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;  // xcam documentation has SS active low
-  //hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
-  hspi1.Init.CLKPhase    = SPI_PHASE_1EDGE;   // xcam phase has sample/setup -> which is leading clock edge
-  //hspi1.Init.CLKPhase  = SPI_PHASE_2EDGE;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  //hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;   // Do get a 0x97 0x01
-  //hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;  // No 0x97 0x01
-  //hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;   // No 0x97 0x01
-  // 64 also gives 0x97 0x01 which is what we want
-    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;  // xcam has 1000kHz
-                                                            // 64 should give ~1Mbits/sec
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;  // xcam has MSB
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 10;  // xcam ?? TODO
+  hspi1.Init.CRCPolynomial = 10;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();

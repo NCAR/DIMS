@@ -1,6 +1,5 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (9-2020-q2-update)
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
@@ -18,13 +17,12 @@ C_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
-Middlewares/%.o: ../Middlewares/%.c Middlewares/subdir.mk
-	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 '-D__weak=__attribute__((weak))' -DDEBUG_ENABLED '-D__packed=__attribute__((__packed__))' -DUSE_HAL_DRIVER -DSTM32F427xx -c -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Middlewares/Third_Party/FatFs/src -I../Middlewares/Third_Party/FreeRTOS/Source/include -I../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS -I../Drivers/CMSIS/Include -I../Drivers/Others -I../Drivers/Sensors -I../Middlewares -I../Middlewares/Inc -I../Services -I../Appl -O0 -ffunction-sections -Wall -fstack-usage -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
+Middlewares/%.o: ../Middlewares/%.c
+	@echo 'Building file: $<'
+	@echo 'Invoking: MCU GCC Compiler'
+	@echo $(PWD)
+	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 '-D__weak=__attribute__((weak))' -DDEBUG_ENABLED '-D__packed=__attribute__((__packed__))' -DUSE_HAL_DRIVER -DSTM32F427xx -I"C:/Users/iguser/workspace/OBC_MITCH/Drivers/STM32F4xx_HAL_Driver/Inc" -I"C:/Users/iguser/workspace/OBC_MITCH/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy" -I"C:/Users/iguser/workspace/OBC_MITCH/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F" -I"C:/Users/iguser/workspace/OBC_MITCH/Drivers/CMSIS/Device/ST/STM32F4xx/Include" -I"C:/Users/iguser/workspace/OBC_MITCH/Middlewares/Third_Party/FatFs/src" -I"C:/Users/iguser/workspace/OBC_MITCH/Middlewares/Third_Party/FreeRTOS/Source/include" -I"C:/Users/iguser/workspace/OBC_MITCH/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS" -I"C:/Users/iguser/workspace/OBC_MITCH/Drivers/CMSIS/Include" -I"C:/Users/iguser/workspace/OBC_MITCH/Drivers/Others" -I"C:/Users/iguser/workspace/OBC_MITCH/Drivers/Sensors" -I"C:/Users/iguser/workspace/OBC_MITCH/Middlewares" -I"C:/Users/iguser/workspace/OBC_MITCH/Middlewares/Inc" -I"C:/Users/iguser/workspace/OBC_MITCH/Services" -I"C:/Users/iguser/workspace/OBC_MITCH/Appl"  -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
 
-clean: clean-Middlewares
-
-clean-Middlewares:
-	-$(RM) ./Middlewares/ESTTC.d ./Middlewares/ESTTC.o ./Middlewares/MCU_Init.d ./Middlewares/MCU_Init.o
-
-.PHONY: clean-Middlewares
 
