@@ -19,23 +19,22 @@ uint8_t Setup_SD(void){
     //Create a fatfs File System
 
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-//    if(SD_FileSystem_Create()){
-//        print("Couldn't create file system\r\n");
-//        return 1;
-//    }
-//
+    if(SD_FileSystem_Create()){
+        print("Couldn't create file system\r\n");
+        return 1;
+    }
+
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
 //TODO Need to Get this working
     //find a uniq id for the HK data
-//    if(get_next_housekeeping_file_id(&HouseKeepingName[0])){
-//        print("Couldn't get a unique ID for the HK file\r\n");
-//        return 2;
-//    }
+    if(get_next_housekeeping_file_id(&HouseKeepingName[0])){
+        print("Couldn't get a unique ID for the HK file\r\n");
+        return 2;
+    }
     
     //Make the Housekeeing File
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-    strcpy(HouseKeepingName,"HK.txt");
     if(Make_HouseKeeping(HouseKeepingName)){
         //if DEBUG is defined print message to terminal
         print("Couldn't make HK file\r\n");
@@ -125,46 +124,22 @@ void Write_To_HK(const char *String){
  *         TODO -- ISSues Here. With pulling files in Dir
  * ***************************************************************/
  uint8_t get_next_housekeeping_file_id(const char *String){
-    //Get the list of files in the system
-    TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+    uint8_t filename_iter = 0;
+    const char filename[10];
+    bool found_filename = false;
 
-    FILINFO *FileList[500];
-    char ID[6] = {0};
-
-    if(SD_GetFiles(&FileList)){
-        print("Couldn't get file list\r\n");
-        return 1;
-    }
-    uint8_t FileCount = sizeof(&FileList[0]);
-    ///print(("File Count: %d\r\n", FileCount));
-    print("File List:\r\n");
-    //print(FileList);
-    //Find the next available file name
-    uint8_t i;
-    int max_file_id = 0;
-    for(i = 0; i < FileCount; i++){
-        
-        TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-        if(strstr(FileList[i], ".hk") != NULL){
-            //print("Found HK\r\n");
-            //Get the number from the file name
-            uint8_t j;
-            for(j = 0; j < 6; j++){
-                ID[i] = FileList[i]->fname[j];
-            }
-            ID[6] = '\0';
-            print(("%s\r\n",ID));
-            //Convert to an integer
-            int file_id = atoi(ID);
-            if(file_id > max_file_id){
-                max_file_id = file_id;
-            }
+    while(!found_filename){
+        sprintf(filename, "%06d.hk", filename_iter);
+        if(SD_File_Exists(filename)==0){
+            found_filename = true;
         }
     }
-    //Increment the max file id by one and convert to a string
-    max_file_id++;
-    sprintf(String, "%06d.hk", max_file_id);
-    print(("Next File ID: %s\r\n", String));
+    //Get the list of files in the system
+    TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+    const char buffer[50];
+    sprintf(buffer, "Found Free File Name: %s\r\n", filename);
+    print(buffer);
+    sprintf(String, "%s", filename);
     return 0;
     
  }
@@ -176,51 +151,31 @@ void Write_To_HK(const char *String){
  * @retval: (1) if it fails to find the next available file name
  *         (0) if it successfully finds the next available file name
  * ***************************************************************/
-uint8_t get_next_image_id(char *ImageFileName, char *HeaderFileName){
-    TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-    //Get the list of files in the system 
-    //should probably use malloc for the list.
-    char *FileList[1000];
-    char ID[6] = {0};
+uint8_t get_next_image_id(const char *ImageFileName, const char *HeaderFileName){
+    uint8_t filename_iter = 0;
+    const char image_filename[10];
+    const char header_filename[10];    
+    bool found_filename = false;
 
-    if(SD_GetFiles(FileList)){
-        print("Couldn't get file list\r\n");
-        return 1;
-    }
-    uint8_t FileCount = sizeof(FileList);
-    print(("File Count: %d\r\n", FileCount));
-    //Find the next available file name
-    uint8_t i;
-    int max_file_id = 0;
-    for(i = 0; i < FileCount; i++){
-        
-        if(strstr(FileList[i], "raw") != NULL){
-            //print("Found HK\r\n");
-            //Get the number from the file name
-            uint8_t j;
-            for(j = 0; j < 5; j++){
-                ID[i] = FileList[i][j];
-            }
-            ID[5] = '\0';
-            
-            //Convert to an integer
-            int file_id = atoi(ID);
-            fprintf(PAYLOAD, "%i",ID);
-            //if we find the highest file id, save it.
-            if(file_id > max_file_id){
-                max_file_id = file_id;
-            }
+    while(!found_filename){
+        sprintf(image_filename, "%05d.raw", filename_iter);
+        if(SD_File_Exists(&image_filename[0]==0)){
+            found_filename = true;
+        }else{
+            filename_iter++;
         }
     }
-    //Increment the max file id by one and convert to a string
-    max_file_id++;
-    sprintf(ImageFileName, "%05d.raw", max_file_id);
-    sprintf(HeaderFileName, "%05d.txt", max_file_id);
-    #ifdef DEBUG
-        fprintf(PAYLOAD, "Next Image File ID: %s\r\n", ImageFileName);
-        fprintf(PAYLOAD, "Next Header File ID: %s\r\n", HeaderFileName);
-    #endif
+    //Get the list of files in the system
+
+    TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+    const char buffer[50];
+    sprintf(header_filename, "%05d.txt", filename_iter);
+    sprintf(buffer, "Found Free File Name: %s\r\n", image_filename);
+    print(buffer);
+    sprintf(ImageFileName, "%s", image_filename);
+    sprintf(HeaderFileName, "%s", header_filename);
     return 0;
+    
     
  }
 
