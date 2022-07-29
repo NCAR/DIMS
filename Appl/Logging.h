@@ -22,7 +22,7 @@
 void Write_To_HK(const char *String);
 uint8_t Make_HouseKeeping(const char *FileName);
 uint8_t Setup_SD(void);
-uint8_t get_next_image_id(char *ImageFileName, char *HeaderFileName);
+uint8_t get_next_image_id(const char *ImageFileName, const char *HeaderFileName);
 void get_dateString(char* dateString);
 uint8_t get_next_housekeeping_file_id(const char *String);
 void Set_Global_Variables(void);
