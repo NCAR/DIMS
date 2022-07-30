@@ -5,6 +5,8 @@ Damon's Reference XCAM Implementation
 #include "D_XCAM.h"
 #include "TaskMonitor.h"
 #include "EPS.h"
+#include "defs.h"
+
 
 #define D_XCAM_ADDRESS (0x66)
 #define D_XCAM_DEBUG (1)
@@ -42,7 +44,7 @@ uint16_t XCAM_thumb    =  0; // = 0 no thumbnail  , 1=thumbnail
 uint16_t XCAM_grab     =  1; // = 0 no grab, 1=grab an image
 uint8_t  XCAM_mode     =  1; // 1=imaging mode
 
-#define DEBUG (1)
+
 /* Global Vars */
 RTC_TimeTypeDef currentTime;
 RTC_DateTypeDef currentDate;
@@ -66,69 +68,6 @@ D_XCAM_BeginExposure(){
 }
 
 /**
-  * @brief  Launches recovery based on HAL Issues
-  * @param  ret : The HAL_StatusTypeDef notrmal return type of the HAL System
-  * @retval none
-  */
-void HAL_Recovery_Tree(HAL_StatusTypeDef ret){
-   //Findout what error we are getting Error
-   if(ret == HAL_ERROR){
-    #ifdef DEBUG
-       fprintf(PAYLOAD,"HAL has an error\n\r");
-    #endif
-    HAL_Recovery_State_Busy();
-
-   }else if(ret == HAL_BUSY){
-    #ifdef DEBUG
-       fprintf(PAYLOAD,"HAL Was Busy\n");
-    #endif
-    HAL_Recovery_State_Busy();
-
-   }else if(ret == HAL_TIMEOUT){
-    #ifdef DEBUG
-       fprintf(PAYLOAD,"HAL Timed Out\n");
-    #endif
-       HAL_Recovery_State_Busy();
-       //Run Timeout Recovery
-
-   }else if (ret == HAL_OK){
-    #ifdef DEBUG
-      fprintf(PAYLOAD,"And you may ask yourself, \"Well, how did I get here?\"\nHAL Was Okay\n");
-    #endif
-   }
-   return;
-}
-
-
-
-//Recovery From a busy IO port
-//This should only be used if we have been busy for way longer than expected
-//Recovery Tree-->Recovery Busy State -> Recovery Tree
-void HAL_Recovery_State_Busy(void){
-    HAL_StatusTypeDef ret;
-    HAL_I2C_DeInit(&hi2c3);         //Release IO port as GPIO, reset handle status flag
-    ret = HAL_I2C_Init(&hi2c3);
-    HAL_Recovery_Tree(ret);
-
-
-}
-
-
-/**
-*  @brief 
-*  @param XCAM_Status: This is the Current Status of the XCAM
-*  @retval none
-*/
-void XCAM_Recovery_Tree(uint8_t XCAM_Status){
-  //Invalid Opp
-  if (XCAM_Status == 0x02){
-
-  }
-
-}
-
-
-/**
   * @brief  This should Adjust the Exposure Based on the given Setting
   * @param  setting : Duration of Exposure in units of 157us Note: if set to '0' the camera will use Auto Exposure
   * @retval none
@@ -137,143 +76,12 @@ void Adjust_Exposure(uint8_t setting){
     if(setting == 0){
         // set auto-exposure mode
         D_XCAM_SetParameter(XCAM_AUTOEXP, 1);
-        //TO_DO: Do I need to change the Set Exposure time
-
     }else{
         //Set the Exposure Time
         D_XCAM_SetParameter(XCAM_INTTIME, setting);
         D_XCAM_SetParameter(XCAM_AUTOEXP, 0);
-
-
     }
     return;
-}
-
-
-
-/**
-  * @brief  The main Loop of taking exposures with the Camera will cycle through given exposures
-  * @param  none
-  * @retval none
-  */
-void Main_Camera_Loop(void){
-    uint8_t D_XCAM_Status[22] = {0};
-    uint8_t PayloadSPI[260] = {0};
-    uint8_t PayloadI2C[260] = {0};
-    uint16_t packetsRemaining;
-
-    // set the SPI nCS pin high (disable)
-      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-
-      D_XCAM_WaitSeconds(2, true);  // wait for the other tasks to stop printing text
-      D_XCAM_Power_Cycle();
-
-      while(D_XCAM_Init()){
-        #ifdef DEBUG
-          fprintf(PAYLOAD, "We got an issue Initializing\n\rAttempting Again\r\n");
-        #endif
-          TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-
-      }
-
-     // Write_To_File();
-    //  4) Write to parameter 0x00 to identify which interface you wish to acquire an image from (0 for SI0, 1 for SI1, 2 for SI2).
-      D_XCAM_SetParameter(0x00, 1);
-      TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-
-    //  5) Write to parameter 0x10 the file address where you wish the images to be stored. This will be included in each packet as an unsigned short in bytes 6 and 7.
-      D_XCAM_SetParameter(0x10, 0);
-
-      uint8_t len = 4;
-      uint16_t Exposures[4];
-      Exposures[0] = 4000;
-      Exposures[1] = 3000;
-      Exposures[2] = 2000;
-      Exposures[3] = 0;
-
-      uint8_t i = 0;
-      while(1){
-          //If the Index is too high we need to restart fom the beginning
-          if(i > len){
-              i = 0;
-          }
-        // set exposure time
-          Adjust_Exposure(Exposures[i]);
-
-        //  6) Update the payload operation mode to 0x01 for imaging operations.
-          uint8_t ret = D_XCAM_EnableImagingMode();
-          if(ret == 1){
-              #ifdef DEBUG
-              fprintf(PAYLOAD,"Could not transmit Enable Imaging Mode");
-              #endif
-          }if(ret == 2){
-              #ifdef DEBUG
-              fprintf(PAYLOAD,"Could not recieve Enable Imaging Mode");
-              #endif
-          }
-        //  7) A bitwise payload status flag of 0x01 indicates the payload is currently busy in the operation cycle.
-          D_XCAM_GetStatus(D_XCAM_Status);
-          D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
-          TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-
-        //  8) Write to parameter 0x02 a value of 0x01 to initiate image capture. Image capture takes approximately 1s. If the grab command is not received within the timeout, C3D will register a mode failure.
-          D_XCAM_SetParameter(0x02, 0x01); // begin capture
-          TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-          uint8_t counter = 0;
-
-          while((counter<=90)&&(!(D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining) & 0x02))){
-              fprintf(PAYLOAD, "Waiting for image...");
-              D_XCAM_WaitSeconds(1, true);
-          //  9) A payload status flag of 0x02 indicates the image capture is complete and the data packets have been successfully compiled. The payload will then return to standby mode 0x00.
-          // 10) If the payload status flag reads bitwise 0x10 then the operation has failed for some reason (refer to section 6.5.3 for details). The payload will attempt to complete each operation three times before returning this code.
-            D_XCAM_GetStatus(D_XCAM_Status);
-            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
-
-            //Send an Alive Signal
-            if(counter%20==0){
-                #ifdef DEBUG
-                fprintf(PAYLOAD, "Sending an Alive Signal\r\n");
-                #endif
-                TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-            }
-
-            counter = counter+1;
-
-          }
-
-          if(counter>30){
-              #ifdef DEBUG
-              fprintf(PAYLOAD, "Took too Long to Get an Image Resetting");
-              #endif
-              Main_Camera_Loop();
-          }
-
-
-          //while (!(D_XCAM_AnalyzeStatus(D_XCAM_Status) & 0x02));
-          #ifdef DEBUG
-          fprintf(PAYLOAD, "Image captured!\r\n");
-          #endif
-        // 11) The payload data packets waiting will be incremented as the payload returns to standby, to reflect the image packets waiting in the payload memory.
-        // 12) Provided the default parameters are still loaded, the data packets waiting will contain an uncompressed thumbnail image and a compressed, unwindowed full image.
-        // 13) Data can now be downloaded by the platform. Both I2C download commands will be treated identically by the payload.
-         // D_XCAM_GetEntireImageI2C(PayloadI2C);
-         // Write_Image_To_SD(PayloadI2C, 260);
-          TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-          //D_XCAM_GetImageSPI(PayloadSPI);
-          TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-
-        // 14) If the payload status flag reads bitwise 0x08 during a data transfer then no more packets are waiting in memory
-          #ifdef DEBUG
-          fprintf(PAYLOAD,"Damon's XCAM example is done. Halting.\n\r");
-          #endif
-
-          TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-
-          //increment index for exposures
-          i=i+1;
-      }//End While Forever loop
-
-
 }
 
 
@@ -606,7 +414,7 @@ uint8_t D_XCAM_GetImageSPI(uint8_t *buffer)
   if (SPI_ret != HAL_OK)
   {
     fprintf(PAYLOAD,"\tSPI_Receive return was NOT HAL_OK\n\r");
-    HAL_Recovery_Tree(SPI_ret);
+    HAL_Recovery_Tree(SPI_ret, 0);
     return 2;
   }
 

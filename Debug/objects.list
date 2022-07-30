@@ -4,6 +4,7 @@
 "Appl/EPS.o"
 "Appl/HR4000.o"
 "Appl/Logging.o"
+"Appl/Recovery.o"
 "Appl/RunTime.o"
 "Appl/SD_Handler.o"
 "Appl/main.o"

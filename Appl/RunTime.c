@@ -1,5 +1,7 @@
 #include "RunTime.h"
 uint16_t fileIterator = 0;
+#include "defs.h"
+
 
 /******************************************************************************
  * @brief : This Will Run the our Desired Initialization of the XCAM
@@ -48,7 +50,6 @@ uint8_t Initialize_XCAM(void){
     D_XCAM_SetParameter(0x10, 0);
     Write_To_HK("Set Param 0x10 to 0\r\n");
     return 0;
-
 }
 
 /****************************************************************
@@ -63,60 +64,60 @@ uint8_t Make_ImageHeader(const char *filename){
     
 
     //Write the Parameter Output in the headerFile
-    char ParameterOutput[10];
+    char ParameterOutput[30];
     sprintf(ParameterOutput, "Image Number: %d\r\n", D_XCAM_GetParameter(0x00));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Integration Time: %d\r\n", D_XCAM_GetParameter(0x01));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Grab Command: %d\r\n", D_XCAM_GetParameter(0x02));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Auto expose flag: %d\r\n", D_XCAM_GetParameter(0x03));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Healthcheck Status: %d\r\n", D_XCAM_GetParameter(0x04));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Compression Flag: %d\r\n", D_XCAM_GetParameter(0x07));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Thumbnail Flag: %d\r\n", D_XCAM_GetParameter(0x08));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Windowing Flag: %d\r\n", D_XCAM_GetParameter(0x0B));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Window X-Start: %d\r\n", D_XCAM_GetParameter(0x0C));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Window X-Stop: %d\r\n", D_XCAM_GetParameter(0x0D));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Window Y-Start: %d\r\n", D_XCAM_GetParameter(0x0E));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Window Y-Stop: %d\r\n", D_XCAM_GetParameter(0x0F));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Window X-Stop: %d\r\n", D_XCAM_GetParameter(0x0D));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "File Address: %d\r\n", D_XCAM_GetParameter(0x10));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Thumbnail Compression Flag: %d\r\n", D_XCAM_GetParameter(0x11));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Grab wait timeout: %d\r\n", D_XCAM_GetParameter(0x12));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Integration time fractional part: %d\r\n", D_XCAM_GetParameter(0x13));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
     sprintf(ParameterOutput, "Ops Error Code: %d\r\n", D_XCAM_GetParameter(0x15));
-    SD_Append_String_File(filename, ParameterOutput, strlen(ParameterOutput));
+    SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     return 0;
 
 }
@@ -260,7 +261,7 @@ void main_imaging_loop(void){
         if(counter>MaxTime){
             print("Image Capture Failed: Took Too long\r\n");
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-            Main_Camera_Loop();
+            main_imaging_loop();
         }
         print("Image Capture Complete\r\n");
 

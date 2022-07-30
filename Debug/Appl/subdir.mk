@@ -10,6 +10,7 @@ C_SRCS += \
 ../Appl/EPS.c \
 ../Appl/HR4000.c \
 ../Appl/Logging.c \
+../Appl/Recovery.c \
 ../Appl/RunTime.c \
 ../Appl/SD_Handler.c \
 ../Appl/main.c 
@@ -21,6 +22,7 @@ OBJS += \
 ./Appl/EPS.o \
 ./Appl/HR4000.o \
 ./Appl/Logging.o \
+./Appl/Recovery.o \
 ./Appl/RunTime.o \
 ./Appl/SD_Handler.o \
 ./Appl/main.o 
@@ -32,6 +34,7 @@ C_DEPS += \
 ./Appl/EPS.d \
 ./Appl/HR4000.d \
 ./Appl/Logging.d \
+./Appl/Recovery.d \
 ./Appl/RunTime.d \
 ./Appl/SD_Handler.d \
 ./Appl/main.d 
