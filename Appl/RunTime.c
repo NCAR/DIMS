@@ -152,7 +152,7 @@ uint8_t D_XCAM_GetEntireImageSPI(){
     SD_Make_File(Image_FileName);
     SD_Make_File(Header_FileName);
     char buffer[50];
-    sprintf(buffer, "Writing to: %s", Image_FileName);
+    sprintf(buffer, "Writing to: %s\r\n", Image_FileName);
     print(buffer);
     //fresult = f_open(&fid, Image_FileName,FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA_OPEN_EXISTING);
 

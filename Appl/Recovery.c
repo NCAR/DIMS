@@ -16,6 +16,10 @@ void HAL_Recovery_Tree(HAL_StatusTypeDef ret, bool isI2C, uint8_t attempts){
      print("HAL_Recovery_Tree: Too Many Attempts Need to Restart\n");
      Restart_System();
    }
+   if(ret == HAL_OK){
+       print("HAL Was able to Recover: returning to main program\r\n");
+       return;
+   }
    if(isI2C){
         HAL_I2C_Recovery_Tree(ret, attempts);
   //If we are not using I2C
