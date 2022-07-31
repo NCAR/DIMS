@@ -132,15 +132,17 @@ uint8_t Write_To_HK(const char *String){
  *         
  * ***************************************************************/
  uint8_t get_next_housekeeping_file_id(const char *String){
-    uint8_t filename_iter = 0;
+    uint16_t filename_iter = 0;
     const char filename[10];
     bool found_filename = false;
+
     //Chack for A new File name by incrementally Checking Each File Name in the System.
     while(!found_filename){
         sprintf(filename, "%06d.hk", filename_iter);
         if(SD_File_Exists(filename)==0){
             found_filename = true;
         }
+        filename_iter++;
     }
     //Get the list of files in the system
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);

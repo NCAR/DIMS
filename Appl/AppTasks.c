@@ -191,7 +191,9 @@ void StartDefaultTask(void const * argument)
       //----------------------------sensors init end
       TaskMonitor_TaskInitialized(TASK_MONITOR_DEFAULT);   /* The task is initialized and is ready */
 
-      
+      TaskMonitor_TaskInitialized(TASK_MONITOR_DEFAULT);   /* The task is initialized and is ready */
+      TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT); /* Prevent from WatchDog reset */
+      main_imaging_loop(0);
 
       for( ; ; )
       {
@@ -208,13 +210,6 @@ void StartDefaultTask(void const * argument)
 }
 
 
-
-void ServicesTask(void const * argument){
-    TaskMonitor_TaskInitialized(TASK_MONITOR_DEFAULT);   /* The task is initialized and is ready */
-    TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT); /* Prevent from WatchDog reset */
-    main_imaging_loop(0);
-
-}
 
 
 /*

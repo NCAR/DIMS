@@ -35,7 +35,7 @@ void main_imaging_loop(uint8_t tries){
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
     
     //Initalize the XCAM
-    if(Initialize_XCAM()){
+    if(D_XCAM_Initialize_XCAM()){
         //Initialization Failure
         print("Couldn't initialize XCAM\r\n");
         print("Restarting XCAM and Main Loop\r\n");
@@ -58,7 +58,7 @@ void main_imaging_loop(uint8_t tries){
         uint8_t Current_Attempt = 0;
         while((D_XCAM_EnableImagingMode())&&(Current_Attempt < Enable_Imaging_Attempts)){
             print("Couldn't set imaging mode\r\n");
-            pritn("Trying again\r\n");
+            print("Trying again\r\n");
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         }
         if(Current_Attempt == Enable_Imaging_Attempts){

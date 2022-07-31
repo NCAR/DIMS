@@ -8,7 +8,6 @@ C_SRCS += \
 ../Appl/CRC.c \
 ../Appl/D_XCAM.c \
 ../Appl/EPS.c \
-../Appl/HR4000.c \
 ../Appl/Logging.c \
 ../Appl/Recovery.c \
 ../Appl/RunTime.c \
@@ -20,7 +19,6 @@ OBJS += \
 ./Appl/CRC.o \
 ./Appl/D_XCAM.o \
 ./Appl/EPS.o \
-./Appl/HR4000.o \
 ./Appl/Logging.o \
 ./Appl/Recovery.o \
 ./Appl/RunTime.o \
@@ -32,7 +30,6 @@ C_DEPS += \
 ./Appl/CRC.d \
 ./Appl/D_XCAM.d \
 ./Appl/EPS.d \
-./Appl/HR4000.d \
 ./Appl/Logging.d \
 ./Appl/Recovery.d \
 ./Appl/RunTime.d \

@@ -81,7 +81,8 @@ Appl/D_XCAM.o: ../Appl/D_XCAM.c ../Appl/D_XCAM.h \
  C:/Users/iguser/workspace/OBC_MITCH/Middlewares/Inc/version.h \
  ../Appl/S_Band_Trnsm.h ../Appl/main.h ../Appl/X_Band_Trnsm.h \
  C:/Users/iguser/workspace/OBC_MITCH/Services/Svc_RTC.h ../Appl/defs.h \
- ../Appl/DEBUG.h
+ ../Appl/DEBUG.h ../Appl/SD_handler.h ../Appl/Logging.h \
+ ../Appl/SD_Handler.h
 
 ../Appl/D_XCAM.h:
 
@@ -258,3 +259,9 @@ C:/Users/iguser/workspace/OBC_MITCH/Services/Svc_RTC.h:
 ../Appl/defs.h:
 
 ../Appl/DEBUG.h:
+
+../Appl/SD_handler.h:
+
+../Appl/Logging.h:
+
+../Appl/SD_Handler.h:

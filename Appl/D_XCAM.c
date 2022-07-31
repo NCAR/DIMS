@@ -99,7 +99,7 @@ uint8_t D_XCAM_GetEntireImageSPI(){
 
       num_download_requests++;
     }
-  return;
+  return 0;
 }
 
 /******************************************************************************
@@ -223,7 +223,7 @@ uint8_t D_XCAM_Make_ImageHeader(const char *filename){
  * @retval (0) if success, (1) if error
  * @note   This function is called by the main program.
  * ****************************************************************************/
-D_XCAM_BeginExposure(){
+uint8_t D_XCAM_BeginExposure(){
   if(D_XCAM_SetParameter(XCAM_GRAB, 1)){
     print("D_XCAM_SetParameter(XCAM_GRAB, 1) failed\n");
     return 1;
@@ -800,18 +800,18 @@ const char * D_XCAM_GetParameter(uint8_t ID){
   osDelay(3);
 
   const char Parameter[50] = {0};
+  char tempBuffer[20];
   if (D_XCAM_receive(status, 22, true)){
-    #ifdef DEBUG
-      sprintf("Could not receive\r\n");
-    #endif
+      sprintf(Parameter,"Could not receive\r\n");
   }
 
 
   if (D_XCAM_RAWSTATUS){
     sprintf(Parameter, "Status: 0x");
     for (i=0; i<22; i++)
-      sprintf(Parameter, "%02x ", status[i]);
-    fprintf(Parameter, "\r\n");
+      spritntf(tempBuffer, "%02x ", status[i]);
+      strcat(Parameter,tempBuffer);
+    strcat(Parameter, "\r\n");
   }
 
   return Parameter;
