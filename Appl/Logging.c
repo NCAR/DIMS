@@ -141,8 +141,9 @@ uint8_t Write_To_HK(const char *String){
         sprintf(filename, "%06d.hk", filename_iter);
         if(SD_File_Exists(filename)==0){
             found_filename = true;
-        }
+        }else{
         filename_iter++;
+        }
     }
     //Get the list of files in the system
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
