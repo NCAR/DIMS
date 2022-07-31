@@ -155,7 +155,6 @@ uint8_t D_XCAM_Initialize_XCAM(void){
  *          (0) if it successfully creates the header file
  *****************************************************************/
 uint8_t D_XCAM_Make_ImageHeader(const char *filename){
-    SD_Make_File(filename);
     
 
     //Write the Parameter Output in the headerFile
@@ -776,7 +775,7 @@ uint8_t D_XCAM_SetParameter(uint8_t ID, uint16_t value)
  * @param ID : Parameter to set
  * @return (1) if it did not transmit (2) issue it ded not recieve (0)everything Went Well
  */
-const uint8_t * D_XCAM_GetParameter(uint8_t ID){
+const char * D_XCAM_GetParameter(uint8_t ID){
   uint8_t i;
   uint8_t txbuf[5] = {0};
   uint8_t status[22] = {0};
@@ -799,20 +798,23 @@ const uint8_t * D_XCAM_GetParameter(uint8_t ID){
   }
 
   osDelay(3);
-  
+
+  const char Parameter[50] = {0};
   if (D_XCAM_receive(status, 22, true)){
     #ifdef DEBUG
-      fprintf(PAYLOAD,"Could not receive\r\n");
+      sprintf("Could not receive\r\n");
     #endif
   }
 
+
   if (D_XCAM_RAWSTATUS){
-    fprintf(PAYLOAD, "Status: 0x");
+    sprintf(Parameter, "Status: 0x");
     for (i=0; i<22; i++)
-      fprintf(PAYLOAD, "%02x ", status[i]);
-    fprintf(PAYLOAD, "\r\n");
+      sprintf(Parameter, "%02x ", status[i]);
+    fprintf(Parameter, "\r\n");
   }
-  return status;
+
+  return Parameter;
 }
 
 

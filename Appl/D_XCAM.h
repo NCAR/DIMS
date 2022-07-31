@@ -20,7 +20,7 @@ void D_XCAM_Power_On(void);
 void D_XCAM_Power_Off(void);
 uint8_t D_XCAM_ReadParameter(void);
 void Adjust_Exposure(uint8_t setting);
-
+const char * D_XCAM_GetParameter(uint8_t ID);
 //Damon's Original Function
 void D_XCAM_Example(void);
 uint8_t D_XCAM_Init(void);
