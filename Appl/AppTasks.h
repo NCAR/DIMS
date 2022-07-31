@@ -35,8 +35,8 @@
 * EXTERNAL DEFINES
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-#define ENABLE_S_BAND_TRANSMITTER
-#define ENABLE_X_BAND_TRANSMITTER
+//#define ENABLE_S_BAND_TRANSMITTER
+//#define ENABLE_X_BAND_TRANSMITTER
 // OBC ADCS System task
 // #define ENABLE_OBC_ADCS
 // OBC board as X/S-Band transmitter testing medium

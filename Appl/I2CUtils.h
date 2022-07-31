@@ -1,1 +1,0 @@
-uint16_t XCAM_crc16(uint16_t seed, uint8_t *pBuffer, int length)

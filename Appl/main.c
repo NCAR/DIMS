@@ -179,7 +179,6 @@ SCB->CCR |= SCB_CCR_DIV_0_TRP_Pos;     // Enable zero devision fault
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-
   osThreadDef(myStartDefaultTask, StartDefaultTask, osPriorityLow, 0, 6*128);
   defaultTaskHandle = osThreadCreate(osThread(myStartDefaultTask), NULL);
 #if !defined(ENABLE_OBC_ADCS) || (defined(ENABLE_OBC_ADCS) && !ADCS_SIM_DEBUG)
@@ -187,10 +186,9 @@ SCB->CCR |= SCB_CCR_DIV_0_TRP_Pos;     // Enable zero devision fault
 #endif
   TaskMonitor_Init();
 
-  osThreadDef(myServicesTask, ServicesTask, osPriorityLow, 0, 6*128);
+
+  osThreadDef(myServicesTask, ServicesTask, osPriorityHigh, 0, 6*128);
   ServiceTaskHandle = osThreadCreate(osThread(myServicesTask), NULL);
-
-
 #if (defined(ENABLE_S_BAND_TRANSMITTER) || defined(ENABLE_X_BAND_TRANSMITTER))
   /* Create the task of that component */
   osThreadDef(myS_X_BAND_Task, S_X_BAND_Task, osPriorityLow, 1, 12*128);

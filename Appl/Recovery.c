@@ -83,8 +83,6 @@ void HAL_I2C_Recovery_Tree(HAL_StatusTypeDef ret, uint8_t attempts){
         print("HAL I2C Was Okay\n\r");
         HAL_Recovery_Tree(ret, 1, attempts);
     }
-
-
 }
 /**
   * @brief  Launches recovery based on XCAM Issues Will toggle the I2C Bus then Jump back into the Recovery Tree
@@ -113,7 +111,22 @@ void HAL_Recovery_State_Busy_SPI(uint8_t attempts){
 }
 
 
+/*******
+ * @brief  Launches recovery based on XCAM Issues Will launch Different Recovery Attempts based on issue
+ * @retval none
+ */
+void XCAM_Recovery_Tree(uint8_t Status){
+  return;
+}
+
+/** ***
+ * @brief  Writes to the Housekeeping File then restarts the System
+ * @retval none
+ */
 void Restart_System(){
     print("Restarting System\n\r");
+    //Unmount the SD Card
+    f_mount(&SDFatFS, (TCHAR const*)NULL, 0);
+    //Reset the System
     HAL_NVIC_SystemReset();
 }
