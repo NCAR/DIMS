@@ -9,7 +9,7 @@
  * @retval None
  */
 void main_imaging_loop(uint8_t tries){
-    uint8_t max_tries = 3;
+    uint8_t max_tries = 4;
     
     //If we have tried hings too many Times its Time to Restart The System
     if(tries > max_tries){
@@ -107,7 +107,7 @@ void main_imaging_loop(uint8_t tries){
         //Get the Exposure to a file
         print("Image Capture Complete\r\n");
         char buffer[50];
-        sprintf(buffer, "Writing Exposure: %i", Exposures[i]);
+        sprintf(buffer, "Writing Exposure: %i\r\n", Exposures[i]);
         print(buffer);
         D_XCAM_GetEntireImageSPI();
         

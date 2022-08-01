@@ -37,7 +37,6 @@ uint8_t SD_Make_File(const char *FileName){
 
     //Close the File 
     f_close(&SDFile);
-    fprintf(PAYLOAD, "Successfully Written To SD Card!\r\n");
     val = 0;
     
     error:
@@ -80,9 +79,6 @@ uint8_t SD_Append_String_File(const char *FileName, char *data, uint16_t len){
     
     //Close the File
     f_close(&SDFile);
-    #ifdef DEBUG
-        fprintf(PAYLOAD, "Sucessfully Written To SD Card!\r\n");
-    #endif
     val = 0;
     
     error:
@@ -125,9 +121,6 @@ uint8_t SD_Append_Data_File(const char *FileName, uint8_t *data, uint16_t len){
     
     //Close the File
     f_close(&SDFile);
-    #ifdef DEBUG
-        fprintf(PAYLOAD, "Successfully Written To SD Card!\r\n");
-    #endif
     val = 0;
     
     error:

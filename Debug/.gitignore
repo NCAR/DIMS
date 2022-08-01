@@ -1,9 +1,4 @@
+/Appl/
 /Drivers/
 /Middlewares/
-/Services/
 /startup/
-/makefile
-/objects.list
-/objects.mk
-/Appl/
-/sources.mk

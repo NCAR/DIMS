@@ -107,7 +107,6 @@ uint8_t Write_To_HK(const char *String){
     
     strcat(timeStr, ": ");
     strcat(timeStr, String);
-    strcat(timeStr, "\r\n");
     //Write to File
     if(SD_Append_String_File(HouseKeepingName, &timeStr[0], strlen(timeStr))){
         #ifdef DEBUG
@@ -116,9 +115,6 @@ uint8_t Write_To_HK(const char *String){
         #endif
     }
     
-    #ifdef DEBUG
-        fprintf(PAYLOAD, "Successfully wrote to HK file\r\n");
-    #endif
     return 0;
 }
 
@@ -171,7 +167,7 @@ uint8_t get_next_image_id(const char *ImageFileName, const char *HeaderFileName)
     //incrementally Check each Used File Name in the System.
     while(!found_filename){
         sprintf(image_filename, "%05d.raw", filename_iter);
-        if(SD_File_Exists(&image_filename[0]==0)){
+        if(SD_File_Exists(&image_filename[0])==0){
             found_filename = true;
         }else{
             filename_iter++;
