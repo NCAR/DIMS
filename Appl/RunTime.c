@@ -109,8 +109,9 @@ void main_imaging_loop(uint8_t tries){
         char buffer[50];
         sprintf(buffer, "Writing Exposure: %i\r\n", Exposures[i]);
         print(buffer);
+        D_XCAM_SendInitOrUpdate(false, false);
         D_XCAM_GetEntireImageSPI();
-        
+        D_XCAM_SendInitOrUpdate(false, true);
 
         // Write_Image_To_SD(PayloadI2C, 260);
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);

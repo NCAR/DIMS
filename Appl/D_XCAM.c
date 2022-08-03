@@ -92,7 +92,7 @@ uint8_t D_XCAM_GetEntireImageSPI(){
       SD_Append_String_File(Header_FileName, status, sizeof(status));
       
       //Every 30 Packets Send an alive Signal
-      if(num_download_requests%30==0){
+      if(num_download_requests%500==0){
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         EPS_check(1,1);
       }
@@ -468,7 +468,7 @@ uint8_t D_XCAM_GetStatus(uint8_t *status)
 
   D_XCAM_SetCRC(txbuf, 4);
   if (D_XCAM_DEBUG)
-    fprintf(PAYLOAD, "Requesting camera status.\n\r");
+    //fprintf(PAYLOAD, "Requesting camera status.\n\r");
   if (D_XCAM_transmit(txbuf, 4))
     return 1;
   osDelay(3);
