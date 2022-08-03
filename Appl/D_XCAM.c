@@ -440,12 +440,12 @@ uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData)
     strcat(stringBuffer, " INVALID\n\r");
   }
   //Print Data To HK
-  print(stringBuffer);
+  //print(stringBuffer);
   *priorityData = PriorityData;
-  sprintf(stringBuffer, "\t\tPriority Data: %d\n\r", PriorityData);
-  print(stringBuffer);
-  sprintf(stringBuffer, "\t\tTotal Data: %d\n\r", TotalData);
-  print(stringBuffer);
+  //sprintf(stringBuffer, "\t\tPriority Data: %d\n\r", PriorityData);
+  //print(stringBuffer);
+  //sprintf(stringBuffer, "\t\tTotal Data: %d\n\r", TotalData);
+  //print(stringBuffer);
   return OperationFlag;
 }
 
@@ -477,10 +477,10 @@ uint8_t D_XCAM_GetStatus(uint8_t *status)
 
   if (D_XCAM_RAWSTATUS)
   {
-    fprintf(PAYLOAD, "Status: 0x");
-    for (i=0; i<22; i++)
-      fprintf(PAYLOAD, "%02x ", status[i]);
-    fprintf(PAYLOAD, "\r");
+    //fprintf(PAYLOAD, "Status: 0x");
+    //for (i=0; i<22; i++)
+      //fprintf(PAYLOAD, "%02x ", status[i]);
+    //fprintf(PAYLOAD, "\r");
   }
   return 0;
 }    
