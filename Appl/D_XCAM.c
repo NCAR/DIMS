@@ -8,7 +8,7 @@ Damon's Reference XCAM Implementation
 #include "defs.h"
 #include "SD_handler.h"
 #include "Logging.h"
-
+#include <stdbool.h>
 
 #define D_XCAM_ADDRESS (0x66)
 #define D_XCAM_DEBUG (1)
@@ -56,17 +56,21 @@ struct tm currTime;
 /****************************************************************************
  * @brief : This will pull The Entire Image Until the priority packets read 0 from the XCAM
  * @param buffer : Pointer to the buffer
- * @return None
+ * @return 1 if an error happened, 0 if everything went well
  ****************************************************************************/
 uint8_t D_XCAM_GetEntireImageSPI(){
     uint8_t ImagePacket[260] = {0};//Buffer For Image Packet
     uint8_t status[22] = {0};//Buffer For Status of the Xcam
     uint16_t packetsRemaining;//Howmany Packets do We have left to Go through
     uint16_t num_download_requests = 0;//Keep Track Of our Downlaod Requests so we dont get stuck unexpectedly
-    
+    bool Error_Flag = false;//Flag to indicate if there was an error
     //Find out how many Packets need to be downloaded
     D_XCAM_GetStatus(status);
-    D_XCAM_AnalyzeStatus(status, &packetsRemaining);
+    bool Error_Flag = false;
+    D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
+    if(Error_Flag == true){
+        return 1;
+    }
     uint16_t max_download_requests = packetsRemaining*1.5;// arbitary Value Assumes half of the packets are going to fail  
 
     //Find the Next available Filename
@@ -88,7 +92,10 @@ uint8_t D_XCAM_GetEntireImageSPI(){
       SD_Append_Data_File(Image_FileName, ImagePacket, sizeof(ImagePacket));
       D_XCAM_GetStatus(status);
       //Write to the Header File for the image
-      D_XCAM_AnalyzeStatus(status, &packetsRemaining);
+      D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
+      if(Error_Flag == true){
+        return 1;
+      }
       SD_Append_String_File(Header_FileName, status, sizeof(status));
       
       //Every 30 Packets Send an alive Signal
@@ -290,7 +297,8 @@ void D_XCAM_Example(void){
 
 //  7) A bitwise payload status flag of 0x01 indicates the payload is currently busy in the operation cycle.
   D_XCAM_GetStatus(D_XCAM_Status);
-  D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
+  bool Error_Flag = false;
+  D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
   TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
 //  8) Write to parameter 0x02 a value of 0x01 to initiate image capture. Image capture takes approximately 1s. If the grab command is not received within the timeout, C3D will register a mode failure.
@@ -304,8 +312,8 @@ void D_XCAM_Example(void){
   // 10) If the payload status flag reads bitwise 0x10 then the operation has failed for some reason (refer to section 6.5.3 for details). The payload will attempt to complete each operation three times before returning this code.
     D_XCAM_GetStatus(D_XCAM_Status);
   }
-
-  while (!(D_XCAM_AnalyzeStatus(D_XCAM_Status, D_XCAM_AnalyzeStatus) & 0x02));
+  bool Error_Flag = false;
+  while (!(D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag) & 0x02));
   fprintf(PAYLOAD, "Image captured!\r\n");
 // 11) The payload data packets waiting will be incremented as the payload returns to standby, to reflect the image packets waiting in the payload memory.
 // 12) Provided the default parameters are still loaded, the data packets waiting will contain an uncompressed thumbnail image and a compressed, unwindowed full image.
@@ -411,12 +419,14 @@ uint8_t D_XCAM_Init(void){
 *  @param prioriryData: pointer to the register to store the number of priority data packets
 *  @retvalue: opperationFlag Hex info about the current opperation Flags
 */
-uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData)
+uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData, bool *Error_Flag)
 {
   uint8_t OperationMode = status[2];
   uint16_t OperationFlag = (status[3] << 8) | status[4];
   uint16_t PriorityData = (status[5] << 8) | status[6];
   uint32_t TotalData = (status[7] << 24) | (status[8] << 16) | (status[9] << 8) | status[10];
+  *Error_Flag = false;
+
   char stringBuffer[100];
   if (OperationMode){
     sprintf(stringBuffer, "\tImaging Mode, Flags: ");
@@ -435,16 +445,26 @@ uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData)
     strcat(stringBuffer, " NOPACKETS\n\r");
   }
   if (OperationFlag & 0x10){
+    //Last opperation Failed
     strcat(stringBuffer, " OPERR\n\r");
     uint8_t status[22] = {0};
     D_XCAM_ReadErrorParameter(status);
     D_XCAM_AnalyzeError(status);
+    *Error_Flag = true;
+    
   }
   if (OperationFlag & 0x20){
+    //Invalid Opperation Mode
     strcat(stringBuffer, " INVALID\n\r");
+    *Error_Flag = true;
   }
   //Print Data To HK
   //print(stringBuffer);
+
+  if (*Error_Flag == true){
+    print("Damn Dude, an Error Happened\n\r");
+    print(stringBuffer);
+  }
   *priorityData = PriorityData;
   //sprintf(stringBuffer, "\t\tPriority Data: %d\n\r", PriorityData);
   //print(stringBuffer);
@@ -545,11 +565,12 @@ uint8_t D_XCAM_ReadErrorParameter(uint8_t *status){
 * @brief:Analyze the error status of the XCAM *
 * @param: status: pointer to where the error status lives
 * @retval: OperationFlag: The Curent Opperation Flag
+* @note Dont have time to figure out how to handle all the error Statuses properly will just reset the camera for now
 */
 uint16_t D_XCAM_AnalyzeError(uint8_t *status){
   //Allocate Memory for the error status
   char stringBuffer[200];
-  print("Analyzing Error Status\n\r");
+  strcat(stringBuffer, "Analyzing Error Status\n\r");
   uint16_t OperationFlag = (status[2] << 8) | status[3];
   
   if (OperationFlag & 0x01){
@@ -571,6 +592,7 @@ uint16_t D_XCAM_AnalyzeError(uint8_t *status){
     strcat(stringBuffer, " Invalid Parameter Combination\n\r"); 
   }
   print(stringBuffer);
+  
   return OperationFlag;
 }
 
@@ -612,7 +634,7 @@ uint8_t D_XCAM_GetImageSPI(uint8_t *buffer)
     return 3;
 
   if (D_XCAM_ValidateCRC(buffer, 260) == false)
-    fprintf(PAYLOAD, "WARNING: response failed CRC check\n\r");
+    print"WARNING: response failed CRC check\n\r");
   D_XCAM_PrintACKOrResponse(buffer, 260);
   return 0;
 }
@@ -939,7 +961,7 @@ uint8_t D_XCAM_receive(uint8_t *buffer, size_t len, bool ack)
     if ((len == 260) && (buffer[0] = 0x91))
         buffer[0] = 0x95;
     if (D_XCAM_ValidateCRC(buffer, len) == false)
-      fprintf(PAYLOAD, "WARNING: response failed CRC check\n\r");
+      print("WARNING: response failed CRC check\n\r");
   }
   //For Type 2 PackagesWe need to Send an Ack
   if (ack) // if we need to send an acknowledgement packet

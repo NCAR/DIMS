@@ -1,6 +1,7 @@
 #include "Logging.h"
 #include "defs.h"
 #include "Recovery.h"
+#include "RunTime.h"
 
 /**
   * @brief  Launches recovery based on HAL Issues if too many attempts this will launch a reset
@@ -116,6 +117,7 @@ void HAL_Recovery_State_Busy_SPI(uint8_t attempts){
  * @retval none
  */
 void XCAM_Recovery_Tree(uint8_t Status){
+  main_imaging_loop(0);
   return;
 }
 
@@ -128,5 +130,10 @@ void Restart_System(){
     //Unmount the SD Card
     f_mount(&SDFatFS, (TCHAR const*)NULL, 0);
     //Reset the System
-    HAL_NVIC_SystemReset();
+    //WARNING this Currently Doesnt Work, need to find a way to reset the system
+    //I think the issue is with the boot loader not jumping to the right location
+    //HAL_NVIC_SystemReset();
+
+    //Alternative
+    main_imaging_loop(0);
 }

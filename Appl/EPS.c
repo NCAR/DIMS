@@ -80,8 +80,16 @@ void EPS_check(int printToFile, int printToPayload ) {
             "EPS status LUP3 LUP5: %ld %ld \r\n", statusLUP3, statusLUP5 );
     }
 }
+bool EPS_Voltage_Level_Low(float lower_bound){
 
-
+    float Voltage;
+    EPS_getBattery_voltage(&Voltage);
+    if(Voltage<lower_bound){
+        return true;
+    }else{
+        return false;
+    }
+}
 
 //Get the Battery Voltage:
 void EPS_getBattery_voltage(float * PtrVoltage){

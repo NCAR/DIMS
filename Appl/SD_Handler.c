@@ -252,14 +252,14 @@ uint8_t SD_File_Exists(const char *FileName){
   switch (fr) {
 
   case FR_OK:
-    sprintf(buffer, "Found File: %s\r\n", FileName);
-    print(buffer);
+    //sprintf(buffer, "Found File: %s\r\n", FileName);
+    //print(buffer);
     status = 1;
     break;
 
   case FR_NO_FILE:
-    sprintf(buffer, "File Not Found: %s\r\n", FileName);
-    print(buffer);
+    //sprintf(buffer, "File Not Found: %s\r\n", FileName);
+    //print(buffer);
     status = 0;
     break;
 

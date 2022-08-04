@@ -14,7 +14,7 @@ uint8_t D_XCAM_Initialize_XCAM(void);
 uint8_t D_XCAM_Make_ImageHeader(const char *filename);
 uint8_t D_XCAM_ReadErrorParameter(uint8_t *status);
 uint8_t D_XCAM_GetEntireImageI2C(uint8_t *buffer);
-uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData);
+uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData, bool *Error_Flag);
 uint16_t D_XCAM_AnalyzeError(uint8_t *status);
 void D_XCAM_Power_On(void);
 void D_XCAM_Power_Off(void);
