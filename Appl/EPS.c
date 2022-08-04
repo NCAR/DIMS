@@ -18,6 +18,7 @@ void EPS_check(int printToFile, int printToPayload ) {
     float battVconv = 2.346;
     float battCconv = 3.05 ;
     char battery_text[100];
+    long Defaults;
     //float voltZconv = 2.4414063;
     char  timeStr[25];
     FIL  fidB;
@@ -29,6 +30,8 @@ void EPS_check(int printToFile, int printToPayload ) {
     EPS_read( 1,&battV);  //  1 is battery voltage
     EPS_read( 2,&battC);  //  2 is battery current
     EPS_read(11,&voltZ);  // 11 is panel Z voltage
+    EPS_read(43,&Defaults);
+    fprintf(PAYLOAD, "Default Value %i\r\n", Defaults);
     EPS_read(16,&statusLUP3);
     EPS_read(17,&statusLUP5);
     HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
@@ -80,7 +83,14 @@ void EPS_check(int printToFile, int printToPayload ) {
 
 
 
-
+//Get the Battery Voltage:
+void EPS_getBattery_voltage(float * PtrVoltage){
+    long BatteryV;
+    float BV;
+    EPS_read(1, &BatteryV);
+    BV = (float)BatteryV*.0023394775;
+    *PtrVoltage = BV;
+}
 
 // This routine will reads from I2C1 which is the EPS. --Alice
 void EPS_read(uint16_t Cmd, long *pEpsValue) {

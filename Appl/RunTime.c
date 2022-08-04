@@ -10,11 +10,33 @@
  */
 void main_imaging_loop(uint8_t tries){
     uint8_t max_tries = 4;
-    
+    TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
     //If we have tried hings too many Times its Time to Restart The System
+
     if(tries > max_tries){
         Restart_System();
     }
+
+    //Turn on Fast Charge on the EPS
+    EPS_write(9, 1);
+    EPS_write(8, 1);
+    EPS_check(1,1);
+    osDelay(10);
+    float Voltage;
+    EPS_getBattery_voltage(&Voltage);
+    //Check the Battery Level it its low take a break
+    if(Voltage<3.70){
+        D_XCAM_Power_Off();
+        while(Voltage<4.0){
+            print("Waiting For Battery to recharge");
+            TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+            osDelay(20000);
+            EPS_check(1,1);
+            EPS_getBattery_voltage(&Voltage);
+        }
+        main_imaging_loop(0);
+    }
+
     //Setup The Registers
     uint8_t D_XCAM_Status[22] = {0};
     uint16_t packetsRemaining;
@@ -42,10 +64,27 @@ void main_imaging_loop(uint8_t tries){
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         main_imaging_loop(tries++);
     }
+    fprintf(PAYLOAD, "Wating after initializiation");
+    osDelay(9);
+    fprintf(PAYLOAD, "Done Waiting");
 
     uint8_t i = 0;// Keeps Track of Which Exposure we are on
     while(1){
         //If the Index is too high we need to restart fom the beginning of the Exposure list
+        //Check Battery Voltage
+        float Voltage;
+        EPS_getBattery_voltage(&Voltage);
+        if(Voltage<3.70){
+            D_XCAM_Power_Off();
+            while(Voltage<4.0){
+                print("Waiting For Battery to recharge");
+                TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+                osDelay(20000);
+                EPS_check(1,1);
+                EPS_getBattery_voltage(&Voltage);
+            }
+            main_imaging_loop(0);
+        }
         if(i > len){
             i = 0;
         }

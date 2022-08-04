@@ -145,6 +145,10 @@ uint8_t D_XCAM_Initialize_XCAM(void){
     return 0;
 }
 
+void D_XCAM_Write_EPS_8_9_bit1(void){
+  EPS_write(9, 1);
+  EPS_write(8, 1);
+}
 
 
 /****************************************************************
