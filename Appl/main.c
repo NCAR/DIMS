@@ -153,8 +153,8 @@ SCB->CCR |= SCB_CCR_DIV_0_TRP_Pos;     // Enable zero devision fault
   MX_FMC_Init();
   //MX_I2C1_Init(); // I2C1 will be enabled only during use and disabled all the time while not used
   MX_I2C2_Init();
-  MX_I2C3_Init();  // For XCAM
-  MX_SPI1_Init();  // For XCAM
+  MX_I2C3_Init();
+  MX_SPI1_Init();
   MX_SPI2_Init();
   MX_SPI6_Init();
   MX_TIM5_Init();
@@ -162,24 +162,6 @@ SCB->CCR |= SCB_CCR_DIV_0_TRP_Pos;     // Enable zero devision fault
   MX_USART4_Init();
   MX_USART6_Init();
   MX_RTC_Init();
-
-  HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
-  HAL_RTC_GetDate(&hrtc,&sDate,calendar_format);
-  fprintf(PAYLOAD,"\t MX_RTC_Init time is %04d-%02d-%02d %02d:%02d:%02d\r",
-      sDate.Year,sDate.Month,sDate.Date,sTime.Hours,sTime.Minutes,sTime.Seconds);
-  sDate.Year    = 0x22; // in RTC_FORMAT_BCD 0x20 = 20 etc
-  sDate.Month   = 0x01;
-  sDate.Date    = 0x10;
-  sTime.Hours   = 0x13;
-  sTime.Minutes = 0x04;
-  sTime.Seconds = 0x00;
-  //HAL_RTC_SetTime(&hrtc,&sTime,RTC_FORMAT_BCD);
-  //HAL_RTC_SetDate(&hrtc,&sDate,RTC_FORMAT_BCD);
-
-  HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
-  HAL_RTC_GetDate(&hrtc,&sDate,calendar_format);
-  fprintf(PAYLOAD,"\t NEW             time is %04d-%02d-%02d %02d:%02d:%02d\r",
-      sDate.Year,sDate.Month,sDate.Date,sTime.Hours,sTime.Minutes,sTime.Seconds);
 
 #ifdef ENABLE_S_BAND_TRANSMITTER
   S_BAND_TRNSM_Init();
@@ -197,7 +179,6 @@ SCB->CCR |= SCB_CCR_DIV_0_TRP_Pos;     // Enable zero devision fault
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-
   osThreadDef(myStartDefaultTask, StartDefaultTask, osPriorityLow, 0, 6*128);
   defaultTaskHandle = osThreadCreate(osThread(myStartDefaultTask), NULL);
 #if !defined(ENABLE_OBC_ADCS) || (defined(ENABLE_OBC_ADCS) && !ADCS_SIM_DEBUG)
@@ -205,10 +186,9 @@ SCB->CCR |= SCB_CCR_DIV_0_TRP_Pos;     // Enable zero devision fault
 #endif
   TaskMonitor_Init();
 
+
   osThreadDef(myServicesTask, ServicesTask, osPriorityLow, 0, 6*128);
   ServiceTaskHandle = osThreadCreate(osThread(myServicesTask), NULL);
-
-
 #if (defined(ENABLE_S_BAND_TRANSMITTER) || defined(ENABLE_X_BAND_TRANSMITTER))
   /* Create the task of that component */
   osThreadDef(myS_X_BAND_Task, S_X_BAND_Task, osPriorityLow, 1, 12*128);
@@ -220,7 +200,6 @@ SCB->CCR |= SCB_CCR_DIV_0_TRP_Pos;     // Enable zero devision fault
 #endif
 
   POWER_ON_UHF_1;   // Enable the power supply of the UHF transmitter.
-
 
   /* Start scheduler */
   osKernelStart();

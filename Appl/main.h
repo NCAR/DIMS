@@ -63,8 +63,6 @@
 #define UHF_MAX_PAR_NUM         8
 #define OBC_I2C_ADDRESS         0x11
 #define S_X_BAND_ADDRESS        0x40
-
-#define XCAM_ADDRESS            0x99 // for ESTTC command use only
 /* End of ESTTC related definitions */
 
 /* Bootloader related definitions */

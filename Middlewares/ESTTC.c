@@ -83,10 +83,6 @@ volatile char RxBuffer[ESTTC_INTERFACE_NUMBER][UART_BUFFER_SIZE];
 */
 volatile uint32_t RxBuffHead[ESTTC_INTERFACE_NUMBER], RxBuffTail[ESTTC_INTERFACE_NUMBER], RxBuffLen[ESTTC_INTERFACE_NUMBER];
 
-
-// hook to modify XCAM integration time.
-volatile uint16_t XCAM_inttime_desired;
-
 /*
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * INTERNAL (STATIC) VARIABLES DEFINITION/DECLARATION 
@@ -566,7 +562,7 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
                 }
 
             }
-            else if (txline[Interface][4] == EPS_I2C_ADDRESS) // EPS read
+            else if (txline[Interface][4] == EPS_I2C_ADDRESS)
             {
                 uint8_t timeout = 0;
                 HAL_StatusTypeDef I2C_retStat;
@@ -579,9 +575,6 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
                     CRC_value_calc = crc32(0, (BYTE *)begin, len-ESTTC_CYMBOLS_IN_CRC);
 
                     CRC_value_rx = ESTTC_ExtractCRC(&begin[cmd_length+1]);
-                    sprintf(print_buff[Interface], "EPS CRC check: got 0x%04X , expected 0x%04X",
-                            (unsigned int)CRC_value_rx,(unsigned int)CRC_value_calc);
-                    ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
 
                     if( CRC_value_calc != CRC_value_rx )
                     {
@@ -592,8 +585,7 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
 
                 }else if( len != cmd_length )
                 {
-                    sprintf(print_buff[Interface], "ERR - length, got %ld expected %ld for EPS read",
-                            (long int)len,(long int)cmd_length);
+                    sprintf(print_buff[Interface], "ERR - length");
                     ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
                     return ProcessedPacket;
                 }
@@ -635,9 +627,7 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
                         eps_reg = (temp_reg_buff[0] << 8) + temp_reg_buff[1];
 
                         //Print out the register value
-                        //sprintf(print_buff[Interface], " EPS OK+0x%04X   %04ld \t", eps_reg,(long int)eps_reg);
-                        //alice
-                        sprintf(print_buff[Interface], " EPS read OK value is 0x%04X or decimal %04ld \t", eps_reg,(long int)eps_reg);
+                        sprintf(print_buff[Interface], "OK+%04X", eps_reg);
                         ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
                     }
                     else{
@@ -701,7 +691,7 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
                         }
                     }
 
-                    //Read the register from the ANT
+                    //Read the register from the EPS
                     AntStat = HAL_I2C_Master_Receive(&hi2c1, ANT_I2C_ADDRESS<<1, tmp, ANT_PAR_LEN, 10);
 
 
@@ -1425,7 +1415,7 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
                             ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
                         }
                     }
-            }else if (txline[Interface][4] == EPS_I2C_ADDRESS) // EPS write
+            }else if (txline[Interface][4] == EPS_I2C_ADDRESS)
             {
                 uint8_t timeout = 0;
                 HAL_StatusTypeDef I2C_retStat;
@@ -1470,13 +1460,6 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
                                 break;
                             }
                         }
-                        // This is the original code, using HAL_I2C_Master_Transmit -- Alice
-                        //HAL_StatusTypeDef HAL_I2C_Master_Transmit(
-                        //    I2C_HandleTypeDef *hi2c, 
-                        //    uint16_t DevAddress, 
-                        //    uint8_t *pData, 
-                        //    uint16_t Size, 
-                        //    uint32_t Timeout);
                         I2C_retStat = HAL_I2C_Master_Transmit(&hi2c1, EPS_I2C_ADDRESS<<1, (uint8_t *)&txline[Interface][7], 2, 10);
 
                         timeout ++;
@@ -1485,14 +1468,8 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
 
                     if (HAL_OK == I2C_retStat)
                     {
-                        // alice
-                        //sprintf(print_buff[Interface], "OK EPS CMD %X, Reg %x", txline[Interface][5], txline[Interface][7]);
-                        sprintf(print_buff[Interface], "write OK EPS Reg 0x%x value 0x%x", 
-                            txline[Interface][7], txline[Interface][8]);
+                        sprintf(print_buff[Interface], "OK EPS CMD %X, Reg %x", txline[Interface][5], txline[Interface][7]);
                         ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
-                        //sprintf(print_buff[Interface], "write OK EPS Reg 0x%x value %d", 
-                        //    txline[Interface][7], temp_reg_buff);
-                        //ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
                     }
                     else{
                         sprintf(print_buff[Interface], "ERR - executing");
@@ -2315,17 +2292,6 @@ static uint8_t ESTTC_ProcessData(ESTTC_InterfacesEnum Interface)
                   sprintf(print_buff[Interface], "ERR - length");
                   ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
               }
-            }
-            else if (txline[Interface][4] == XCAM_ADDRESS)
-            {
-                // TODO this conversion is decimal
-                XCAM_inttime_desired = ((int)(txline[Interface][6]) - (int)'0')*10
-                                     + ((int)(txline[Interface][7]) - (int)'0');
-                sprintf(print_buff[Interface], "XCAM commanding in ESTTC.c %c %c",
-                    txline[Interface][6],txline[Interface][7]);
-                ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
-                sprintf(print_buff[Interface], "XCAM commanding in ESTTC.c %d",XCAM_inttime_desired);
-                ESTTC_CMD_CRC_Print_string(ComInterface, print_buff[Interface]);
             }
             else{
               sprintf(print_buff[Interface], "ERR addr");
