@@ -97,6 +97,9 @@ void EPS_getBattery_voltage(float * PtrVoltage){
     float BV;
     EPS_read(1, &BatteryV);
     BV = (float)BatteryV*.0023394775;
+    char buffer[20];
+    //strcat(buffer,);
+    //print(buffer);
     *PtrVoltage = BV;
 }
 

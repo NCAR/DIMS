@@ -11,6 +11,7 @@
 void main_imaging_loop(uint8_t tries){
     uint8_t max_tries = 4;
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+    bool Error_Flag;
     //If we have tried hings too many Times its Time to Restart The System
 
     if(tries > max_tries){
@@ -24,6 +25,7 @@ void main_imaging_loop(uint8_t tries){
     osDelay(10);
     float Voltage;
     EPS_getBattery_voltage(&Voltage);
+    const char buffer[20];
     //Check the Battery Level it its low take a break
     if(Voltage<3.70){
         D_XCAM_Power_Off();
@@ -33,6 +35,8 @@ void main_imaging_loop(uint8_t tries){
             osDelay(20000);
             EPS_check(1,1);
             EPS_getBattery_voltage(&Voltage);
+            sprintf(buffer, "Battery V %.4f", Voltage);
+            print(buffer);
         }
         main_imaging_loop(0);
     }
@@ -43,11 +47,11 @@ void main_imaging_loop(uint8_t tries){
     
     //Exposure Settings
     uint8_t len = 4;
-    uint8_t Exposures[4];
+    uint16_t Exposures[4];
     Exposures[0] = 0;//Set Exposure to Auto
-    Exposures[1] = 1; //in units of 63uS
-    Exposures[2] = 30;
-    Exposures[3] = 158;
+    Exposures[1] = 158; //in units of 63uS
+    Exposures[2] = 300;
+    Exposures[3] = 600;
     
     //Setup the SD Card
     if(Setup_SD()){
@@ -64,9 +68,9 @@ void main_imaging_loop(uint8_t tries){
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         main_imaging_loop(tries++);
     }
-    fprintf(PAYLOAD, "Wating after initializiation");
+    fprintf(PAYLOAD, "Waiting after initializiation\r\n");
     osDelay(9);
-    fprintf(PAYLOAD, "Done Waiting");
+    fprintf(PAYLOAD, "Done Waiting\r\n");
 
     uint8_t i = 0;// Keeps Track of Which Exposure we are on
     while(1){
@@ -76,12 +80,14 @@ void main_imaging_loop(uint8_t tries){
         EPS_getBattery_voltage(&Voltage);
         if(Voltage<3.70){
             D_XCAM_Power_Off();
-            while(Voltage<4.0){
+            while(Voltage<3.55){
                 print("Waiting For Battery to recharge");
                 TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
                 osDelay(20000);
+
                 EPS_check(1,1);
                 EPS_getBattery_voltage(&Voltage);
+                sprintf(buffer, "Battery V %.6f\r\n", Voltage);
             }
             main_imaging_loop(0);
         }
@@ -109,7 +115,7 @@ void main_imaging_loop(uint8_t tries){
 
         //Write the Statuses To the HK and Ensure Everything is okay
         D_XCAM_GetStatus(D_XCAM_Status);
-        D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
+        D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
         D_XCAM_BeginExposure(); // begin capture
@@ -118,13 +124,13 @@ void main_imaging_loop(uint8_t tries){
         uint8_t counter = 0;
         uint8_t MaxTime = 90;
         //if e havent ran out of time and the Curent status is busy
-        while((counter<=MaxTime)&&(!(D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining) & 0x02))){
+        while((counter<=MaxTime)&&(!(D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining, &Error_Flag) & 0x02))){
             
             print("Waiting for image...\r\n");
             osDelay(1000);    /* Give processing time for the other tasks */
             
             D_XCAM_GetStatus(D_XCAM_Status);
-            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
+            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
 
             //Send an Alive Signal
             if(counter%20==0){
@@ -149,7 +155,10 @@ void main_imaging_loop(uint8_t tries){
         sprintf(buffer, "Writing Exposure: %i\r\n", Exposures[i]);
         print(buffer);
         D_XCAM_SendInitOrUpdate(false, false);
-        D_XCAM_GetEntireImageSPI();
+        if(D_XCAM_GetEntireImageSPI()){
+            print("XCAM Hit an Error, Restarting Main Loop");
+            main_imaging_loop(0);
+        }
         D_XCAM_SendInitOrUpdate(false, true);
 
         // Write_Image_To_SD(PayloadI2C, 260);
