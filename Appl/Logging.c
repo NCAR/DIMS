@@ -160,7 +160,7 @@ uint8_t Write_To_HK(const char *String){
  *         (0) if it successfully finds the next available file name
  * ***************************************************************/
 uint8_t get_next_image_id(const char *ImageFileName, const char *HeaderFileName){
-    uint8_t filename_iter = 0;
+    uint16_t filename_iter = 0;
     const char image_filename[10];
     const char header_filename[10];    
     bool found_filename = false;

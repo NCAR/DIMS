@@ -42,12 +42,13 @@ void main_imaging_loop(uint8_t tries){
     uint16_t packetsRemaining;
     
     //Exposure Settings
-    uint8_t len = 4;
-    uint8_t Exposures[4];
+    uint8_t len = 5;
+    uint16_t Exposures[5];
     Exposures[0] = 0;//Set Exposure to Auto
-    Exposures[1] = 1; //in units of 63uS
-    Exposures[2] = 30;
-    Exposures[3] = 158;
+    Exposures[1] = 80; //in units of 63uS
+    Exposures[2] = 159;
+    Exposures[3] = 238;
+    Exposures[4] = 317;
     
     //Setup the SD Card
     if(Setup_SD()){
@@ -70,6 +71,7 @@ void main_imaging_loop(uint8_t tries){
 
     uint8_t i = 0;// Keeps Track of Which Exposure we are on
     while(1){
+        bool Error_Flag;
         //If the Index is too high we need to restart fom the beginning of the Exposure list
         //Check Battery Voltage
         float Voltage;
@@ -109,7 +111,7 @@ void main_imaging_loop(uint8_t tries){
 
         //Write the Statuses To the HK and Ensure Everything is okay
         D_XCAM_GetStatus(D_XCAM_Status);
-        D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
+        D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
         D_XCAM_BeginExposure(); // begin capture
@@ -118,13 +120,17 @@ void main_imaging_loop(uint8_t tries){
         uint8_t counter = 0;
         uint8_t MaxTime = 90;
         //if e havent ran out of time and the Curent status is busy
-        while((counter<=MaxTime)&&(!(D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining) & 0x02))){
+        while((counter<=MaxTime)&&(!(D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining, &Error_Flag) & 0x02))){
             
             print("Waiting for image...\r\n");
             osDelay(1000);    /* Give processing time for the other tasks */
             
             D_XCAM_GetStatus(D_XCAM_Status);
-            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
+            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
+            D_XCAM_GetStatus(D_XCAM_Status);
+            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
+            D_XCAM_GetStatus(D_XCAM_Status);
+            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
 
             //Send an Alive Signal
             if(counter%20==0){

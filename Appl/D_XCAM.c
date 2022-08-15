@@ -66,7 +66,6 @@ uint8_t D_XCAM_GetEntireImageSPI(){
     bool Error_Flag = false;//Flag to indicate if there was an error
     //Find out how many Packets need to be downloaded
     D_XCAM_GetStatus(status);
-    bool Error_Flag = false;
     D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
     if(Error_Flag == true){
         return 1;
@@ -311,9 +310,9 @@ void D_XCAM_Example(void){
   //  9) A payload status flag of 0x02 indicates the image capture is complete and the data packets have been successfully compiled. The payload will then return to standby mode 0x00.
   // 10) If the payload status flag reads bitwise 0x10 then the operation has failed for some reason (refer to section 6.5.3 for details). The payload will attempt to complete each operation three times before returning this code.
     D_XCAM_GetStatus(D_XCAM_Status);
-  }
-  bool Error_Flag = false;
-  while (!(D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag) & 0x02));
+  }while (!(D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag) & 0x02));
+
+
   fprintf(PAYLOAD, "Image captured!\r\n");
 // 11) The payload data packets waiting will be incremented as the payload returns to standby, to reflect the image packets waiting in the payload memory.
 // 12) Provided the default parameters are still loaded, the data packets waiting will contain an uncompressed thumbnail image and a compressed, unwindowed full image.
@@ -634,7 +633,7 @@ uint8_t D_XCAM_GetImageSPI(uint8_t *buffer)
     return 3;
 
   if (D_XCAM_ValidateCRC(buffer, 260) == false)
-    print"WARNING: response failed CRC check\n\r");
+    print("WARNING: response failed CRC check\n\r");
   D_XCAM_PrintACKOrResponse(buffer, 260);
   return 0;
 }
