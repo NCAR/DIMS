@@ -20,3 +20,4 @@
 void EPS_check(int printToFile, int printToPayload );
 void EPS_read(uint16_t Cmd, long *pEpsValue);
 void EPS_write(uint16_t memAddress, uint8_t Value);
+void EPS_getBattery_voltage(float * PtrVoltage);

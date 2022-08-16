@@ -79,16 +79,9 @@ Appl/AppTasks.o: ../Appl/AppTasks.c ../Appl/AppTasks.h ../Appl/main.h \
  C:/Users/iguser/workspace/OBC_MITCH/Drivers/Sensors/Panels.h \
  C:/Users/iguser/workspace/OBC_MITCH/Middlewares/Inc/version.h \
  ../Appl/S_Band_Trnsm.h ../Appl/X_Band_Trnsm.h \
- C:/Users/iguser/workspace/OBC_MITCH/Services/Svc_RTC.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/RunTime.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/D_XCAM.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/EPS.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/AppTasks.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/S_Band_Trnsm.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/X_Band_Trnsm.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/SD_handler.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/Logging.h \
- C:/Users/iguser/workspace/OBC_MITCH/Appl/SD_Handler.h
+ C:/Users/iguser/workspace/OBC_MITCH/Services/Svc_RTC.h ../Appl/RunTime.h \
+ ../Appl/EPS.h ../Appl/SD_handler.h ../Appl/Logging.h \
+ ../Appl/SD_Handler.h
 
 ../Appl/AppTasks.h:
 
@@ -258,20 +251,12 @@ C:/Users/iguser/workspace/OBC_MITCH/Middlewares/Inc/version.h:
 
 C:/Users/iguser/workspace/OBC_MITCH/Services/Svc_RTC.h:
 
-C:/Users/iguser/workspace/OBC_MITCH/Appl/RunTime.h:
+../Appl/RunTime.h:
 
-C:/Users/iguser/workspace/OBC_MITCH/Appl/D_XCAM.h:
+../Appl/EPS.h:
 
-C:/Users/iguser/workspace/OBC_MITCH/Appl/EPS.h:
+../Appl/SD_handler.h:
 
-C:/Users/iguser/workspace/OBC_MITCH/Appl/AppTasks.h:
+../Appl/Logging.h:
 
-C:/Users/iguser/workspace/OBC_MITCH/Appl/S_Band_Trnsm.h:
-
-C:/Users/iguser/workspace/OBC_MITCH/Appl/X_Band_Trnsm.h:
-
-C:/Users/iguser/workspace/OBC_MITCH/Appl/SD_handler.h:
-
-C:/Users/iguser/workspace/OBC_MITCH/Appl/Logging.h:
-
-C:/Users/iguser/workspace/OBC_MITCH/Appl/SD_Handler.h:
+../Appl/SD_Handler.h:

@@ -1,5 +1,0 @@
-EEPROM_emul.c:87:6:EEPROM_Emul_Init	8	static
-EEPROM_emul.c:115:6:EEPROM_Emul_SyncInfo	72	static
-EEPROM_emul.c:210:13:EEPROM_emul_calc_CRC	16	static
-EEPROM_emul.c:244:29:EEPROM_Emul_Search_NextFreePosition	16	static
-EEPROM_emul.c:286:29:EEPROM_Emul_Search_LastData	24	static

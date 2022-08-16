@@ -9,3 +9,4 @@ void HAL_Recovery_State_Busy_I2C(uint8_t attemps);
 void HAL_Recovery_State_Busy_SPI(uint8_t attemps);
 void XCAM_Recovery_Tree(uint8_t Status);
 void Restart_System();
+void Recovery_HAL_Reset(void);

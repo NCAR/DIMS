@@ -31,7 +31,7 @@ void EPS_check(int printToFile, int printToPayload ) {
     EPS_read( 2,&battC);  //  2 is battery current
     EPS_read(11,&voltZ);  // 11 is panel Z voltage
     EPS_read(43,&Defaults);
-    fprintf(PAYLOAD, "Default Value %i\r\n", Defaults);
+    fprintf(PAYLOAD, "Default Value %li\r\n", Defaults);
     EPS_read(16,&statusLUP3);
     EPS_read(17,&statusLUP5);
     HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
@@ -51,13 +51,13 @@ void EPS_check(int printToFile, int printToPayload ) {
                          FA_WRITE | FA_READ | FA_OPEN_ALWAYS);
                       // FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA_OPEN_EXISTING);//,FA_OPEN_APPEND);
         if( fresult == FR_OK ) {
-            fprintf(PAYLOAD,"****************BATT.txt SUCCESS!!!!!!!\r\n");
+//            fprintf(PAYLOAD,"****************BATT.txt SUCCESS!!!!!!!\r\n");
             fresult = f_stat (filenm, &file_info);
             if( fresult == FR_OK ) {
-                fprintf(PAYLOAD,"****************BATT.txt f_stat SUCCESS!!!!!!!\r\n");
+//                fprintf(PAYLOAD,"****************BATT.txt f_stat SUCCESS!!!!!!!\r\n");
                 fresult = f_lseek(&fidB, file_info.fsize);   //Go to the end of the file
                 if( fresult == FR_OK ) {
-                    fprintf(PAYLOAD,"****************BATT.txt f_lseek SUCCESS!!!!!!!\r\n");
+//                    fprintf(PAYLOAD,"****************BATT.txt f_lseek SUCCESS!!!!!!!\r\n");
                     fprintf((FILE *)&fidB,battery_text);
                     //f_write(&fidB, battery_text, sizeof(battery_text) , &bw);
                 }

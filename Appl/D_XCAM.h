@@ -7,11 +7,16 @@ Damon's Reference XCAM Implementation
 #include "MCU_Init.h"
 #include <stdbool.h>
 
+#ifndef INC_D_XCAM_H_
+#define INC_D_XCAM_H_
+
+
 
 //Mitch's Implemented Functions
 uint8_t D_XCAM_GetEntireImageSPI(void);
+uint8_t D_XCAM_GetEntireImageSPIFast(void);
 uint8_t D_XCAM_Initialize_XCAM(void);
-uint8_t D_XCAM_Make_ImageHeader(const char *filename);
+uint8_t D_XCAM_Make_ImageHeader(char *filename);
 uint8_t D_XCAM_ReadErrorParameter(uint8_t *status);
 uint8_t D_XCAM_GetEntireImageI2C(uint8_t *buffer);
 uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData, bool *Error_Flag);
@@ -42,3 +47,4 @@ uint8_t D_XCAM_EnableImagingMode(void);
 uint8_t D_XCAM_SendInitOrUpdate(bool init, bool imagingmode);
 void D_XCAM_PrintACKOrResponse(uint8_t *buffer, size_t len);
 
+#endif

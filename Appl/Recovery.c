@@ -3,6 +3,22 @@
 #include "Recovery.h"
 #include "RunTime.h"
 
+
+void Recovery_HAL_Reset(void)
+{
+    print("Reinit I2C\n\r");
+    HAL_StatusTypeDef ret;
+    HAL_I2C_DeInit(&hi2c3);         //Release IO port as GPIO, reset handle status flag
+    osDelay(500);
+    ret = HAL_I2C_Init(&hi2c3);
+
+    print("Reinit SPI\n\r");
+    HAL_SPI_DeInit(&hspi1);         //Release IO port as GPIO, reset handle status flag
+    osDelay(500);
+    ret = HAL_SPI_Init(&hspi1);
+    osDelay(500);
+}
+
 /**
   * @brief  Launches recovery based on HAL Issues if too many attempts this will launch a reset
   * @param  ret : The HAL_StatusTypeDef notrmal return type of the HAL System
@@ -14,7 +30,7 @@ void HAL_Recovery_Tree(HAL_StatusTypeDef ret, bool isI2C, uint8_t attempts){
    //Woring This Can Currently Turn into An inifinite Loop, need to becareful with Recusion
    //Findout what error we are getting Error
    if((attempts > 5)&&(ret != HAL_OK)){
-     print("HAL_Recovery_Tree: Too Many Attempts Need to Restart\n");
+     print("HAL_Recovery_Tree: Too Many Attempts Need to Restart\r\n");
      Restart_System();
    }
    if(ret == HAL_OK){
@@ -50,7 +66,7 @@ void HAL_SPI_Recovery_Tree(HAL_StatusTypeDef ret, uint8_t attempts){
         print("HAL SPI Was unexpectedly Busy maybe stuck\n\r");
         HAL_Recovery_State_Busy_SPI(attempts);
     }else if(ret == HAL_TIMEOUT){
-        print(" HAL SPI Timed Out\n");
+        print(" HAL SPI Timed Out\r\n");
         HAL_Recovery_State_Busy_SPI(attempts);
     }else if (ret == HAL_OK){
         print("HAL SPI Was Okay\n\r");
@@ -78,7 +94,7 @@ void HAL_I2C_Recovery_Tree(HAL_StatusTypeDef ret, uint8_t attempts){
         print("HAL I2C Was unexpectedly Busy maybe stuck\n\r");
         HAL_Recovery_State_Busy_I2C(attempts);
     }else if(ret == HAL_TIMEOUT){
-        print(" HAL I2C Timed Out\n");
+        print(" HAL I2C Timed Out\r\n");
         HAL_Recovery_State_Busy_I2C(attempts);
     }else if (ret == HAL_OK){
         print("HAL I2C Was Okay\n\r");
@@ -117,7 +133,7 @@ void HAL_Recovery_State_Busy_SPI(uint8_t attempts){
  * @retval none
  */
 void XCAM_Recovery_Tree(uint8_t Status){
-  main_imaging_loop(0);
+//  main_imaging_loop(0);
   return;
 }
 
@@ -135,5 +151,5 @@ void Restart_System(){
     //HAL_NVIC_SystemReset();
 
     //Alternative
-    main_imaging_loop(0);
+//    main_imaging_loop(0);
 }

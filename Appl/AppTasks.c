@@ -37,7 +37,7 @@
 #include "S_Band_Trnsm.h"
 #include "X_Band_Trnsm.h"
 #include  <Svc_RTC.h>
-#include  <RunTime.h>
+#include "RunTime.h"
 
 /*
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -193,11 +193,16 @@ void StartDefaultTask(void const * argument)
 
       TaskMonitor_TaskInitialized(TASK_MONITOR_DEFAULT);   /* The task is initialized and is ready */
       TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT); /* Prevent from WatchDog reset */
-      main_imaging_loop(0);
+
+
+
+      while(1)
+          XCAM_Run();
 
       for( ; ; )
       {
           TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT); /* Prevent from WatchDog reset */
+
 
           /* blink the Green LED for 50ms to indicate the OBC is running */
           GREEN_LED_ON();
