@@ -3,7 +3,8 @@
 #include "EPS.h"
 #include "time.h"
 #include "defs.h"
-#include <time.h>
+//#include <time.h>
+#include "Logging.h"
 
 /**
  * @brief This Function Makes the House Keeping File
@@ -13,7 +14,7 @@
  *          (1) if it fails to write to the file, 
  *          (0) if it successfully makes the file and writes to it.
  */
-uint8_t SD_Make_File(const char *FileName){
+uint8_t SD_Make_File(char *FileName){
     FRESULT res; /* FatFs function common result code */
     uint32_t byteswritten, bytesread; /* File write/read counts */
     uint8_t val;
@@ -52,7 +53,7 @@ uint8_t SD_Make_File(const char *FileName){
  *          (1) if it fails to write to the file, 
  *          (0) if it successfully makes the file and writes to it.
  */
-uint8_t SD_Append_String_File(const char *FileName, char *data, uint16_t len){
+uint8_t SD_Append_String_File(char *FileName, char *data, uint16_t len){
     FRESULT res; /* FatFs function common result code */
     uint32_t byteswritten, bytesread; /* File write/read counts */
     uint8_t val;    
@@ -94,7 +95,7 @@ uint8_t SD_Append_String_File(const char *FileName, char *data, uint16_t len){
  *          (1) if it fails to write to the file, 
  *          (0) if it successfully makes the file and writes to it.
  */
-uint8_t SD_Append_Data_File(const char *FileName, uint8_t *data, uint16_t len){
+uint8_t SD_Append_Data_File(char *FileName, uint8_t *data, size_t len){
     FRESULT res; /* FatFs function common result code */
     uint32_t byteswritten, bytesread; /* File write/read counts */
     uint8_t val;    
@@ -136,7 +137,7 @@ uint8_t SD_Append_Data_File(const char *FileName, uint8_t *data, uint16_t len){
  *          (0) if it successfully makes the file and writes to it.
  * @note This Function is not used in the current version of the code.
  */
-uint8_t SD_Make_Dir(const char *DirName){
+uint8_t SD_Make_Dir(char *DirName){
     FRESULT res; /* FatFs function common result code */
     uint8_t val;
     //Make Dir
@@ -242,7 +243,7 @@ void BuildPath(char *path){
  *          (0) if file does not exist
  *          (2) error occured Checking for File
  ****************************************************************/
-uint8_t SD_File_Exists(const char *FileName){
+uint8_t SD_File_Exists(char *FileName){
   uint8_t status = 2;
   FRESULT fr;
   FILINFO fno;

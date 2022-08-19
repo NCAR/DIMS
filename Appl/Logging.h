@@ -19,12 +19,12 @@
 
 
 
-uint8_t Write_To_HK(const char *String);
-uint8_t Make_HouseKeeping(const char *FileName);
+uint8_t Write_To_HK(char *String);
+uint8_t Make_HouseKeeping(char *FileName);
 uint8_t Setup_SD(void);
-uint8_t get_next_image_id(const char *ImageFileName, const char *HeaderFileName);
+uint8_t get_next_image_id(char *ImageFileName, char *HeaderFileName);
 void get_dateString(char* dateString);
-uint8_t get_next_housekeeping_file_id(const char *String);
+uint8_t get_next_housekeeping_file_id(char *String);
 void Set_Global_Variables(void);
 void get_random_string(char* NumString);
-uint8_t print(const char *String);
+uint8_t print(char *String);
