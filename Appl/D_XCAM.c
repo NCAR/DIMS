@@ -537,7 +537,7 @@ uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData, bool *Err
   //print(stringBuffer);
 
   if (*Error_Flag == true){
-    print("Damn Dude, an Error Happened\n\r");
+    print("An Error Happened When Analyzing the Status Code\n\r");
     print(stringBuffer);
   }
   *priorityData = PriorityData;
