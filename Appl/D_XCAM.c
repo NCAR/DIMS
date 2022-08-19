@@ -439,12 +439,12 @@ void D_XCAM_Power_On(void){
   #endif
   EPS_write(5,0);  //  --> turn on LUP 3.3v
   // wait for everything to settle
-  D_XCAM_WaitSeconds(5, true);
+  D_XCAM_WaitSeconds(6, true);
 #ifdef DEBUG
   fprintf(PAYLOAD,"Turning on LUP 5v\n\r");
 #endif
   EPS_write(6,0);  //  --> turn on LUP 5v
-  D_XCAM_WaitSeconds(5, true);
+  D_XCAM_WaitSeconds(6, true);
   EPS_check(1,1);
   return;
 }
@@ -502,8 +502,7 @@ uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData, bool *Err
   uint16_t PriorityData = (status[5] << 8) | status[6];
   uint32_t TotalData = (status[7] << 24) | (status[8] << 16) | (status[9] << 8) | status[10];
   *Error_Flag = false;
-
-  char stringBuffer[100];
+  char stringBuffer[150];
   if (OperationMode){
     sprintf(stringBuffer, "\tImaging Mode, Flags: ");
     
@@ -575,12 +574,15 @@ uint8_t D_XCAM_GetStatus(uint8_t *status)
   if (D_XCAM_receive(status, 22, true))
     return 2;
 
+  if (status[4] == 0x92)
+        print("what");
+
   if (D_XCAM_RAWSTATUS)
   {
-    //fprintf(PAYLOAD, "Status: 0x");
-    //for (i=0; i<22; i++)
-      //fprintf(PAYLOAD, "%02x ", status[i]);
-    //fprintf(PAYLOAD, "\r");
+    fprintf(PAYLOAD, "Status: 0x");
+    for (i=0; i<22; i++)
+      fprintf(PAYLOAD, "%02x ", status[i]);
+    fprintf(PAYLOAD, "\r\n");
   }
   return 0;
 }    
@@ -595,7 +597,7 @@ uint8_t D_XCAM_GetStatus(uint8_t *status)
 uint8_t D_XCAM_ReadErrorParameter(uint8_t *status){
   uint8_t i;
   uint8_t txbuf[5] = {0};
-  char stringBuffer[100];
+  char stringBuffer[150] = {0};
   //Request Error Status
   txbuf[0] = 0x94;
   txbuf[1] = 1;
@@ -604,14 +606,14 @@ uint8_t D_XCAM_ReadErrorParameter(uint8_t *status){
 
   for (i=0;i<22;i++)
     status[i] = 0;
-  if(DEBUG)
-    print("Requesting camera error.\n\r");
+//  if(DEBUG)
+//    print("Requesting camera error.\n\r");
   if(D_XCAM_transmit(txbuf, 5)){
     print("Could not transmit\r\n");
     return 1;
   }
 
-  osDelay(3);
+  osDelay(4);
   if (D_XCAM_receive(status, 22, true)){
     print("Could not receive\r\n");
     return 2;
@@ -645,7 +647,7 @@ uint8_t D_XCAM_ReadErrorParameter(uint8_t *status){
 */
 uint16_t D_XCAM_AnalyzeError(uint8_t *status){
   //Allocate Memory for the error status
-  char stringBuffer[200];
+  char stringBuffer[200] = {0};
   strcat(stringBuffer, "Analyzing Error Status\n\r");
   uint16_t OperationFlag = (status[2] << 8) | status[3];
   
@@ -1043,7 +1045,7 @@ uint8_t D_XCAM_receive(uint8_t *buffer, size_t len, bool ack)
     if (D_XCAM_ValidateCRC(buffer, len) == false)
     {
       print("WARNING: response failed CRC check\n\r");
-      fprintf(PAYLOAD,"%x\n",buffer[0]);
+      //fprintf(PAYLOAD,"%x\n",buffer[0]);
     }
   }
   //For Type 2 PackagesWe need to Send an Ack

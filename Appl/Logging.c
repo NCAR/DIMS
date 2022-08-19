@@ -164,12 +164,14 @@ uint8_t get_next_image_id(char *ImageFileName, char *HeaderFileName){
     char image_filename[10] ="";
     char header_filename[10] ="";
     bool found_filename = false;
-    //incrementally Check each Used File Name in the System.
+    //incrementally Check each Used File Name in the System this will take awhile.
     while(!found_filename){
         sprintf(image_filename, "%05d.raw", filename_iter);
         if(SD_File_Exists(&image_filename[0])==0){
+
             found_filename = true;
         }else{
+            TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
             filename_iter++;
         }
     }

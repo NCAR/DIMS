@@ -10,13 +10,15 @@ void CheckVoltage()
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
     EPS_getBattery_voltage(&Voltage);
     //Check the Battery Level it its low take a break
+    char buffer[100];
+    sprintf(buffer, "Current EPS Voltage: %.3f\n\r", Voltage);
+    print(buffer);
     if(Voltage<3.70){
         D_XCAM_Power_Off();
         while(Voltage<4.0){
             print("Waiting For Battery to recharge.\r\n");
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
             osDelay(20000);
-            char buffer[100];
             sprintf(buffer, "Current EPS Voltage: %.3f\n\r", Voltage);
             print(buffer);
             EPS_check(1,1);
@@ -30,9 +32,7 @@ void XCAM_Run()
 {
     HAL_StatusTypeDef ret = HAL_ERROR;
     uint8_t gps[34] = {0};
-    ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
-                                 gps, 32, 100);
-    fprintf(PAYLOAD, "GPS %s\r\n", gps);
+
 
 
     D_XCAM_Power_Off(); // do this right away so batteries can charge
@@ -54,6 +54,7 @@ void XCAM_Run()
     EPS_write(8, 1);
     EPS_check(1,1);
 
+
     //Setup the SD Card <-- no you don't rename this thing
     if(Setup_SD()){
         print("Couldn't setup SD\r\n");
@@ -70,8 +71,14 @@ void XCAM_Run()
         Recovery_HAL_Reset();
         return;
     }
-    while(true)
+
+    uint8_t total_captures = 0;
+
+    while(++total_captures < 30)
     {
+        ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
+                                     gps, 32, 100);
+        fprintf(PAYLOAD, "GPS %s\r\n", gps);
         osDelay(9);
         CheckVoltage();
         // set exposure time
@@ -100,11 +107,18 @@ void XCAM_Run()
         for (i=0; i<90; i++)
         {
             if (D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining, &Error_Flag) & 0x02)
+            {
+                print("Image Capture Complete Attempting to break Loop\r\n");
                 break;
+            }
             print("Waiting for image...\r\n");
             osDelay(1000);    /* Give processing time for the other tasks */
-            D_XCAM_GetStatus(D_XCAM_Status);
-            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
+            if (D_XCAM_GetStatus(D_XCAM_Status))
+            {
+                print("Error checking status.\r\n");
+                osDelay(1000);
+            }
+//           D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         }
 
