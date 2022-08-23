@@ -12,12 +12,17 @@
 void EPS_check(int printToFile, int printToPayload ) {
 
 
-    long  battV, battC;
-    long  voltZ;
+    long  battV, battC, LUP5C, LUP3v3C, BCRC, BCRV;
+    //long  voltZ;
+
     long  statusLUP3, statusLUP5;
     float battVconv = 2.346;
-    float battCconv = 3.05 ;
-    char battery_text[100];
+    float battCconv = 3.05;
+    float LUPCconv = 2.035;
+    float BCRVconv = 2.34;
+    float BCRCconv = 1.523;
+    char battery_text[500];
+    long Defaults;
     //float voltZconv = 2.4414063;
     char  timeStr[25];
     FIL  fidB;
@@ -28,19 +33,30 @@ void EPS_check(int printToFile, int printToPayload ) {
 
     EPS_read( 1,&battV);  //  1 is battery voltage
     EPS_read( 2,&battC);  //  2 is battery current
-    EPS_read(11,&voltZ);  // 11 is panel Z voltage
-    EPS_read(16,&statusLUP3);
-    EPS_read(17,&statusLUP5);
+    EPS_read( 3,&BCRV);  //  3 is bcr voltage
+    EPS_read( 4,&BCRC);  //  4 is bcr current
+    EPS_read( 14,&LUP5C);  //  14 is voltage
+    EPS_read( 15,&LUP3v3C);  //  15 is battery current
+    EPS_read( 17,&statusLUP5);  //  16 is Status
+    EPS_read( 16,&statusLUP3);  //  17 is Status
+
+    EPS_read(43,&Defaults);
+    fprintf(PAYLOAD, "Default Value %li\r\n", Defaults);
     HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
     HAL_RTC_GetDate(&hrtc,&sDate,calendar_format);
     sprintf(timeStr,"%04d-%02d-%02d %02d:%02d:%02d",
         sDate.Year,sDate.Month,sDate.Date,sTime.Hours,sTime.Minutes,sTime.Seconds);
 
     sprintf(battery_text,
-        "%s EPS Batt: voltage(mV): %ld %.2f  \tcurrent(mA): %ld %.2f\r",
+        "%s EPS Batt: voltage(mV): %ld %.2f  \tcurrent(mA): %ld %.2f \tLUP5V Current(mA) %ld %.2f \tLUP3V3 Current(mA) %ld %.2f \tLUP5V ON %ld \tLUP3V3 ON %ld \tBCR Current(mA) %ld %.2f \tBCR Voltage(mV) %ld %.2f \r",
         timeStr,
         battV, battVconv*(float)battV,
-        battC, battCconv*(float)battC);
+        battC, battCconv*(float)battC,
+        LUP5C, LUPCconv*(float)LUP5C,
+        LUP3v3C, LUPCconv*(float)LUP3v3C,
+        statusLUP5, statusLUP3,
+        BCRC, BCRCconv*(float)BCRC,
+        BCRV, BCRVconv*(float)BCRV);
 
 
     if(printToFile==1) {
@@ -48,13 +64,13 @@ void EPS_check(int printToFile, int printToPayload ) {
                          FA_WRITE | FA_READ | FA_OPEN_ALWAYS);
                       // FA_WRITE|FA_READ|FA_OPEN_ALWAYS|FA_OPEN_EXISTING);//,FA_OPEN_APPEND);
         if( fresult == FR_OK ) {
-            fprintf(PAYLOAD,"****************BATT.txt SUCCESS!!!!!!!\r\n");
+//            fprintf(PAYLOAD,"****************BATT.txt SUCCESS!!!!!!!\r\n");
             fresult = f_stat (filenm, &file_info);
             if( fresult == FR_OK ) {
-                fprintf(PAYLOAD,"****************BATT.txt f_stat SUCCESS!!!!!!!\r\n");
+//                fprintf(PAYLOAD,"****************BATT.txt f_stat SUCCESS!!!!!!!\r\n");
                 fresult = f_lseek(&fidB, file_info.fsize);   //Go to the end of the file
                 if( fresult == FR_OK ) {
-                    fprintf(PAYLOAD,"****************BATT.txt f_lseek SUCCESS!!!!!!!\r\n");
+//                    fprintf(PAYLOAD,"****************BATT.txt f_lseek SUCCESS!!!!!!!\r\n");
                     fprintf((FILE *)&fidB,battery_text);
                     //f_write(&fidB, battery_text, sizeof(battery_text) , &bw);
                 }
@@ -77,10 +93,25 @@ void EPS_check(int printToFile, int printToPayload ) {
             "EPS status LUP3 LUP5: %ld %ld \r\n", statusLUP3, statusLUP5 );
     }
 }
+bool EPS_Voltage_Level_Low(float lower_bound){
 
+    float Voltage;
+    EPS_getBattery_voltage(&Voltage);
+    if(Voltage<lower_bound){
+        return true;
+    }else{
+        return false;
+    }
+}
 
-
-
+//Get the Battery Voltage:
+void EPS_getBattery_voltage(float * PtrVoltage){
+    long BatteryV;
+    float BV;
+    EPS_read(1, &BatteryV);
+    BV = (float)BatteryV*.0023394775;
+    *PtrVoltage = BV;
+}
 
 // This routine will reads from I2C1 which is the EPS. --Alice
 void EPS_read(uint16_t Cmd, long *pEpsValue) {

@@ -2,125 +2,145 @@
 #include "defs.h"
 #include "Recovery.h"
 
+uint8_t Exposure = 0;
 
-/******
- * @brief  Main function To Orchestrate all the Imaging functions
- * @param  tries Represents how many Unsuccessful attempts have been made to rerun the Imaging Loop
- * @retval None
- */
-void main_imaging_loop(uint8_t tries){
-    uint8_t max_tries = 4;
-    
-    //If we have tried hings too many Times its Time to Restart The System
-    if(tries > max_tries){
-        Restart_System();
+void CheckVoltage()
+{
+    float Voltage = 0;
+    TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+    EPS_getBattery_voltage(&Voltage);
+    //Check the Battery Level it its low take a break
+    char buffer[100];
+    EPS_check(1,1);
+    sprintf(buffer, "Current EPS Voltage: %.3f\n\r", Voltage);
+    print(buffer);
+    if(Voltage<3.6){
+        EPS_check(1,1);
+        D_XCAM_Power_Off();
+        EPS_check(1,1);
+        while(Voltage<3.9){
+            print("Waiting For Battery to recharge.\r\n");
+            TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+            osDelay(10000);
+            sprintf(buffer, "Current EPS Voltage: %.3f\n\r", Voltage);
+            print(buffer);
+            EPS_check(1,1);
+            EPS_getBattery_voltage(&Voltage);
+        }
     }
+}
+
+
+void XCAM_Run()
+{
+    HAL_StatusTypeDef ret = HAL_ERROR;
+    uint8_t gps[34] = {0};
+
+
+
+    D_XCAM_Power_Off(); // do this right away so batteries can charge
+    bool Error_Flag = false;
+    uint8_t i, result;
     //Setup The Registers
     uint8_t D_XCAM_Status[22] = {0};
-    uint16_t packetsRemaining;
-    
+    uint16_t packetsRemaining = 0;
     //Exposure Settings
-    uint8_t len = 4;
-    uint8_t Exposures[4];
+    uint8_t len = 5;
+    uint16_t Exposures[5]= {0};
     Exposures[0] = 0;//Set Exposure to Auto
-    Exposures[1] = 1; //in units of 63uS
-    Exposures[2] = 30;
-    Exposures[3] = 158;
-    
-    //Setup the SD Card
+    Exposures[1] = 80; //in units of 63uS
+    Exposures[2] = 159;
+    Exposures[3] = 238;
+    Exposures[4] = 317;
+    //Turn on Fast Charge on the EPS
+    EPS_write(9, 1);
+    EPS_write(8, 1);
+    EPS_check(1,1);
+
+
+    //Setup the SD Card <-- no you don't rename this thing
     if(Setup_SD()){
         print("Couldn't setup SD\r\n");
         //TO-DO Probably need to restart SD
     }
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-    
     //Initalize the XCAM
+    osDelay(1000);
     if(D_XCAM_Initialize_XCAM()){
+        TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         //Initialization Failure
         print("Couldn't initialize XCAM\r\n");
         print("Restarting XCAM and Main Loop\r\n");
-        TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-        main_imaging_loop(tries++);
+        Recovery_HAL_Reset();
+        return;
     }
 
-    uint8_t i = 0;// Keeps Track of Which Exposure we are on
-    while(1){
-        //If the Index is too high we need to restart fom the beginning of the Exposure list
-        if(i > len){
-            i = 0;
-        }
+    uint8_t total_captures = 0;
+
+    while(++total_captures < 30)
+    {
+        ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
+                                     gps, 32, 100);
+        char buffer[50] = {0};
+        sprintf(buffer, "GPS %s\r\n", gps);
+        print(buffer);
+
+        osDelay(9);
+        CheckVoltage();
+        EPS_check(1,1);
 
         // set exposure time
-        Adjust_Exposure(Exposures[i]);
-        
-        //Enable Imaging Mode on the XCAM
-        uint8_t Enable_Imaging_Attempts = 4;
-        uint8_t Current_Attempt = 0;
-        while((D_XCAM_EnableImagingMode())&&(Current_Attempt < Enable_Imaging_Attempts)){
+        Adjust_Exposure(Exposures[Exposure]);
+        for (i=0; i<4; i++)
+        {
+            TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+            result = D_XCAM_EnableImagingMode();
+            if (result == 0)
+                break;
             print("Couldn't set imaging mode\r\n");
+            osDelay(1000);
             print("Trying again\r\n");
-            TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         }
-        if(Current_Attempt == Enable_Imaging_Attempts){
-            print("Couldn't set imaging mode\r\n");
-            print("Restarting XCAM and Main Loop\r\n");
-            TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-            main_imaging_loop(tries++);
-        }
-
+        if (result != 0)
+            return;
         //Write the Statuses To the HK and Ensure Everything is okay
         D_XCAM_GetStatus(D_XCAM_Status);
-        D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
+        D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+
 
         D_XCAM_BeginExposure(); // begin capture
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-        
-        uint8_t counter = 0;
-        uint8_t MaxTime = 90;
-        //if e havent ran out of time and the Curent status is busy
-        while((counter<=MaxTime)&&(!(D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining) & 0x02))){
-            
+
+        for (i=0; i<90; i++)
+        {
+            if (D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining, &Error_Flag) & 0x02)
+            {
+                print("Image Capture Complete Attempting to break Loop\r\n");
+                break;
+            }
             print("Waiting for image...\r\n");
             osDelay(1000);    /* Give processing time for the other tasks */
-            
-            D_XCAM_GetStatus(D_XCAM_Status);
-            D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
-
-            //Send an Alive Signal
-            if(counter%20==0){
-                print("Sending Alive Signal\r\n");
-                TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+            if (D_XCAM_GetStatus(D_XCAM_Status))
+            {
+                print("Error checking status.\r\n");
+                osDelay(1000);
             }
-
-            counter = counter+1;
-
-        }
-        //If it took too long restart main loop
-        if(counter>MaxTime){
-            print("Image Capture Failed: Took Too long\r\n");
+//           D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-            main_imaging_loop(tries++);
         }
 
-        
         //Get the Exposure to a file
         print("Image Capture Complete\r\n");
-        char buffer[50];
-        sprintf(buffer, "Writing Exposure: %i\r\n", Exposures[i]);
+        sprintf(buffer, "Writing Exposure: %i\r\n", Exposures[Exposure]);
         print(buffer);
         D_XCAM_SendInitOrUpdate(false, false);
-        D_XCAM_GetEntireImageSPI();
+        D_XCAM_GetEntireImageSPIFast();
+        Exposure++;
+        if (Exposure > 4)
+          Exposure = 0;
         D_XCAM_SendInitOrUpdate(false, true);
-
-        // Write_Image_To_SD(PayloadI2C, 260);
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+    }
+}
 
-        //increment index for exposures
-        i=i+1;
-
-    }//End While Forever loop
-
-
-
-}//End main imaging loop Function

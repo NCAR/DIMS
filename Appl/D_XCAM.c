@@ -8,7 +8,12 @@ Damon's Reference XCAM Implementation
 #include "defs.h"
 #include "SD_handler.h"
 #include "Logging.h"
+#include <stdbool.h>
+#define MIN(a,b) (((a)<(b))?(a):(b))
 
+#define PACKETGROUPSIZE (200)
+
+uint8_t ImageBuffer[260*PACKETGROUPSIZE] = {0};//Buffer For 16 packets
 
 #define D_XCAM_ADDRESS (0x66)
 #define D_XCAM_DEBUG (1)
@@ -56,22 +61,25 @@ struct tm currTime;
 /****************************************************************************
  * @brief : This will pull The Entire Image Until the priority packets read 0 from the XCAM
  * @param buffer : Pointer to the buffer
- * @return None
+ * @return 1 if an error happened, 0 if everything went well
  ****************************************************************************/
 uint8_t D_XCAM_GetEntireImageSPI(){
     uint8_t ImagePacket[260] = {0};//Buffer For Image Packet
     uint8_t status[22] = {0};//Buffer For Status of the Xcam
     uint16_t packetsRemaining;//Howmany Packets do We have left to Go through
     uint16_t num_download_requests = 0;//Keep Track Of our Downlaod Requests so we dont get stuck unexpectedly
-    
+    bool Error_Flag = false;//Flag to indicate if there was an error
     //Find out how many Packets need to be downloaded
     D_XCAM_GetStatus(status);
-    D_XCAM_AnalyzeStatus(status, &packetsRemaining);
+    D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
+    if(Error_Flag == true){
+        return 1;
+    }
     uint16_t max_download_requests = packetsRemaining*1.5;// arbitary Value Assumes half of the packets are going to fail  
 
     //Find the Next available Filename
-    const char Image_FileName[10];
-    const char Header_FileName[10];
+    char Image_FileName[10];
+    char Header_FileName[10];
 
     get_next_image_id(&Image_FileName[0], &Header_FileName[0]);
 
@@ -84,12 +92,14 @@ uint8_t D_XCAM_GetEntireImageSPI(){
     //Keep requewsting packets until we have them all or until its getting Absurd
     while((packetsRemaining>0)&&(num_download_requests<max_download_requests)){
       D_XCAM_GetImageSPI(&ImagePacket[0]);
-
+      TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
       SD_Append_Data_File(Image_FileName, ImagePacket, sizeof(ImagePacket));
       D_XCAM_GetStatus(status);
       //Write to the Header File for the image
-      D_XCAM_AnalyzeStatus(status, &packetsRemaining);
-      SD_Append_String_File(Header_FileName, status, sizeof(status));
+      D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
+      if(Error_Flag == true){
+        return 1;
+      }
       
       //Every 30 Packets Send an alive Signal
       if(num_download_requests%500==0){
@@ -102,6 +112,71 @@ uint8_t D_XCAM_GetEntireImageSPI(){
   return 0;
 }
 
+
+
+
+
+
+
+
+
+
+
+uint8_t D_XCAM_GetEntireImageSPIFast(){
+    uint16_t j;
+    uint16_t i;
+    uint8_t status[22] = {0};//Buffer For Status of the Xcam
+    uint16_t packetsRemaining;//Howmany Packets do We have left to Go through
+    bool Error_Flag = false;//Flag to indicate if there was an error
+    //Find out how many Packets need to be downloaded
+    D_XCAM_GetStatus(status);
+    D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
+    if(Error_Flag == true){
+        return 1;
+    }
+
+    //Find the Next available Filename
+    char Image_FileName[10];
+    char Header_FileName[10];
+    uint16_t PacketsToRequest = 0;
+    get_next_image_id(&Image_FileName[0], &Header_FileName[0]);
+
+    SD_Make_File(Image_FileName);
+    SD_Make_File(Header_FileName);
+    char buffer[50];
+    sprintf(buffer, "Writing to: %s\r\n", Image_FileName);
+    print(buffer);
+
+    for (j=0; j<(5264/PACKETGROUPSIZE+10); j++)
+    {
+        D_XCAM_GetStatus(status);
+        D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
+        fprintf(PAYLOAD, "%d packets remain.\r\n",packetsRemaining);
+        if (packetsRemaining == 0)
+            break;
+        PacketsToRequest = MIN(PACKETGROUPSIZE,packetsRemaining); // don't ask for more than are available
+        for (i=0;i<PacketsToRequest; i++)
+            D_XCAM_GetImageSPI(&ImageBuffer[i*260]);
+        TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+//        SD_Append_Data_File(Image_FileName, ImageBuffer, sizeof(ImageBuffer));
+        SD_Append_Data_File(Image_FileName, ImageBuffer, 260*PacketsToRequest);
+
+    }
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 /******************************************************************************
  * @brief : This Will Run the our Desired Initialization of the XCAM
  * @retval: (1) if it fails to Initialize 
@@ -110,25 +185,27 @@ uint8_t D_XCAM_GetEntireImageSPI(){
 uint8_t D_XCAM_Initialize_XCAM(void){
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
-
     // set the SPI nCS pin high (disable)
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-
     
-    D_XCAM_WaitSeconds(2, true);  // wait for the other tasks to stop printing text
-    D_XCAM_Power_Cycle();
-    
-    uint8_t max_tries = 3;
+//    D_XCAM_WaitSeconds(2, true);  // wait for the other tasks to stop printing text
+    //D_XCAM_Power_Cycle();
+    D_XCAM_Power_On();
+    CheckVoltage();
     uint8_t tries = 0;
-    
-    while((D_XCAM_Init())&&(tries < max_tries)){
+    uint8_t result = 0;
+    for (tries=0; tries<4; tries++)
+    {
+        TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
+        result = D_XCAM_Init();
+        if (result==0)
+            break;
         print("Couldn't initialize XCAM\r\n");
         print("Attempting to Initialize again\r\n");
-        TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-        tries++;
+        osDelay(500);
     }
     //If we ran out of tries to Initialize
-    if(tries == max_tries){
+    if (result != 0){
         print("Couldn't initialize XCAM\r\n");
         return 1;
     }
@@ -145,6 +222,10 @@ uint8_t D_XCAM_Initialize_XCAM(void){
     return 0;
 }
 
+void D_XCAM_Write_EPS_8_9_bit1(void){
+  EPS_write(9, 1);
+  EPS_write(8, 1);
+}
 
 
 /****************************************************************
@@ -154,64 +235,65 @@ uint8_t D_XCAM_Initialize_XCAM(void){
  * @retval: (1) if it fails to create the header file
  *          (0) if it successfully creates the header file
  *****************************************************************/
-uint8_t D_XCAM_Make_ImageHeader(const char *filename){
+uint8_t D_XCAM_Make_ImageHeader(char *filename){
     
-
+/*
     //Write the Parameter Output in the headerFile
     char ParameterOutput[30];
-    sprintf(ParameterOutput, "Image Number: %d\r\n", D_XCAM_GetParameter(0x00));
+    sprintf(ParameterOutput, "Image Number: %s\r\n", D_XCAM_GetParameter(0x00));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Integration Time: %d\r\n", D_XCAM_GetParameter(0x01));
+    sprintf(ParameterOutput, "Integration Time: %s\r\n", D_XCAM_GetParameter(0x01));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Grab Command: %d\r\n", D_XCAM_GetParameter(0x02));
+    sprintf(ParameterOutput, "Grab Command: %s\r\n", D_XCAM_GetParameter(0x02));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Auto expose flag: %d\r\n", D_XCAM_GetParameter(0x03));
+    sprintf(ParameterOutput, "Auto expose flag: %s\r\n", D_XCAM_GetParameter(0x03));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Healthcheck Status: %d\r\n", D_XCAM_GetParameter(0x04));
+    sprintf(ParameterOutput, "Healthcheck Status: %s\r\n", D_XCAM_GetParameter(0x04));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Compression Flag: %d\r\n", D_XCAM_GetParameter(0x07));
+    sprintf(ParameterOutput, "Compression Flag: %s\r\n", D_XCAM_GetParameter(0x07));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Thumbnail Flag: %d\r\n", D_XCAM_GetParameter(0x08));
+    sprintf(ParameterOutput, "Thumbnail Flag: %s\r\n", D_XCAM_GetParameter(0x08));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Windowing Flag: %d\r\n", D_XCAM_GetParameter(0x0B));
+    sprintf(ParameterOutput, "Windowing Flag: %s\r\n", D_XCAM_GetParameter(0x0B));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Window X-Start: %d\r\n", D_XCAM_GetParameter(0x0C));
+    sprintf(ParameterOutput, "Window X-Start: %s\r\n", D_XCAM_GetParameter(0x0C));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Window X-Stop: %d\r\n", D_XCAM_GetParameter(0x0D));
+    sprintf(ParameterOutput, "Window X-Stop: %s\r\n", D_XCAM_GetParameter(0x0D));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Window Y-Start: %d\r\n", D_XCAM_GetParameter(0x0E));
+    sprintf(ParameterOutput, "Window Y-Start: %s\r\n", D_XCAM_GetParameter(0x0E));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Window Y-Stop: %d\r\n", D_XCAM_GetParameter(0x0F));
+    sprintf(ParameterOutput, "Window Y-Stop: %s\r\n", D_XCAM_GetParameter(0x0F));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Window X-Stop: %d\r\n", D_XCAM_GetParameter(0x0D));
+    sprintf(ParameterOutput, "Window X-Stop: %s\r\n", D_XCAM_GetParameter(0x0D));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "File Address: %d\r\n", D_XCAM_GetParameter(0x10));
+    sprintf(ParameterOutput, "File Address: %s\r\n", D_XCAM_GetParameter(0x10));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Thumbnail Compression Flag: %d\r\n", D_XCAM_GetParameter(0x11));
+    sprintf(ParameterOutput, "Thumbnail Compression Flag: %s\r\n", D_XCAM_GetParameter(0x11));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Grab wait timeout: %d\r\n", D_XCAM_GetParameter(0x12));
+    sprintf(ParameterOutput, "Grab wait timeout: %s\r\n", D_XCAM_GetParameter(0x12));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Integration time fractional part: %d\r\n", D_XCAM_GetParameter(0x13));
+    sprintf(ParameterOutput, "Integration time fractional part: %s\r\n", D_XCAM_GetParameter(0x13));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
     
-    sprintf(ParameterOutput, "Ops Error Code: %d\r\n", D_XCAM_GetParameter(0x15));
+    sprintf(ParameterOutput, "Ops Error Code: %s\r\n", D_XCAM_GetParameter(0x15));
     SD_Append_String_File(filename, &ParameterOutput[0], strlen(ParameterOutput));
+*/
     return 0;
 
 }
@@ -225,7 +307,7 @@ uint8_t D_XCAM_Make_ImageHeader(const char *filename){
  * ****************************************************************************/
 uint8_t D_XCAM_BeginExposure(){
   if(D_XCAM_SetParameter(XCAM_GRAB, 1)){
-    print("D_XCAM_SetParameter(XCAM_GRAB, 1) failed\n");
+    print("D_XCAM_SetParameter(XCAM_GRAB, 1) failed\r\n");
     return 1;
   }
   return 0;
@@ -236,8 +318,8 @@ uint8_t D_XCAM_BeginExposure(){
   * @param  setting : Duration of Exposure in units of 157us Note: if set to '0' the camera will use Auto Exposure
   * @retval none
   */
-void Adjust_Exposure(uint8_t setting){
-    const char buffer[50];
+void Adjust_Exposure(uint16_t setting){
+    char buffer[50];
     if(setting == 0){
         // set auto-exposure mode
         D_XCAM_SetParameter(XCAM_AUTOEXP, 1);
@@ -286,7 +368,8 @@ void D_XCAM_Example(void){
 
 //  7) A bitwise payload status flag of 0x01 indicates the payload is currently busy in the operation cycle.
   D_XCAM_GetStatus(D_XCAM_Status);
-  D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining);
+  bool Error_Flag = false;
+  D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
   TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
 //  8) Write to parameter 0x02 a value of 0x01 to initiate image capture. Image capture takes approximately 1s. If the grab command is not received within the timeout, C3D will register a mode failure.
@@ -299,15 +382,15 @@ void D_XCAM_Example(void){
   //  9) A payload status flag of 0x02 indicates the image capture is complete and the data packets have been successfully compiled. The payload will then return to standby mode 0x00.
   // 10) If the payload status flag reads bitwise 0x10 then the operation has failed for some reason (refer to section 6.5.3 for details). The payload will attempt to complete each operation three times before returning this code.
     D_XCAM_GetStatus(D_XCAM_Status);
-  }
+  }while (!(D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag) & 0x02));
 
-  while (!(D_XCAM_AnalyzeStatus(D_XCAM_Status, D_XCAM_AnalyzeStatus) & 0x02));
+
   fprintf(PAYLOAD, "Image captured!\r\n");
 // 11) The payload data packets waiting will be incremented as the payload returns to standby, to reflect the image packets waiting in the payload memory.
 // 12) Provided the default parameters are still loaded, the data packets waiting will contain an uncompressed thumbnail image and a compressed, unwindowed full image.
 // 13) Data can now be downloaded by the platform. Both I2C download commands will be treated identically by the payload.
   D_XCAM_GetImageI2C(PayloadI2C);
-  Write_Image_To_SD(PayloadI2C, 260);
+//  Write_Image_To_SD(PayloadI2C, 260);
   TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
   D_XCAM_GetImageSPI(PayloadSPI);
   TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
@@ -333,14 +416,15 @@ void D_XCAM_Example(void){
  */ 
 void D_XCAM_Power_Off(void){
   #ifdef DEBUG
-  fprintf(PAYLOAD,"\r\tTurning off LUP\n\r");
+  fprintf(PAYLOAD,"Turning off LUP 5v\r\n");
   #endif
   EPS_write(6,1);  //  --> turn off LUP 5v
-  D_XCAM_WaitSeconds(5, true);
+//  D_XCAM_WaitSeconds(5, true);
+  fprintf(PAYLOAD,"Turning off LUP 3v3\r\n");
   EPS_write(5,1);  //  --> turn off LUP 3.3v
   // wait for everything to settle
-  D_XCAM_WaitSeconds(5, true);
-  EPS_check(1,1);
+//  D_XCAM_WaitSeconds(5, true);
+//  EPS_check(1,1);
   return;
 }
 
@@ -351,12 +435,16 @@ void D_XCAM_Power_Off(void){
  */ 
 void D_XCAM_Power_On(void){
   #ifdef DEBUG
-  fprintf(PAYLOAD,"\r\tTurning on LUP\n\r");
+  fprintf(PAYLOAD,"Turning on LUP 3v3\n\r");
   #endif
   EPS_write(5,0);  //  --> turn on LUP 3.3v
   // wait for everything to settle
-  D_XCAM_WaitSeconds(5, true);
+  D_XCAM_WaitSeconds(6, true);
+#ifdef DEBUG
+  fprintf(PAYLOAD,"Turning on LUP 5v\n\r");
+#endif
   EPS_write(6,0);  //  --> turn on LUP 5v
+  D_XCAM_WaitSeconds(6, true);
   EPS_check(1,1);
   return;
 }
@@ -407,13 +495,14 @@ uint8_t D_XCAM_Init(void){
 *  @param prioriryData: pointer to the register to store the number of priority data packets
 *  @retvalue: opperationFlag Hex info about the current opperation Flags
 */
-uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData)
+uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData, bool *Error_Flag)
 {
   uint8_t OperationMode = status[2];
   uint16_t OperationFlag = (status[3] << 8) | status[4];
   uint16_t PriorityData = (status[5] << 8) | status[6];
   uint32_t TotalData = (status[7] << 24) | (status[8] << 16) | (status[9] << 8) | status[10];
-  char stringBuffer[100];
+  *Error_Flag = false;
+  char stringBuffer[150];
   if (OperationMode){
     sprintf(stringBuffer, "\tImaging Mode, Flags: ");
     
@@ -431,16 +520,23 @@ uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData)
     strcat(stringBuffer, " NOPACKETS\n\r");
   }
   if (OperationFlag & 0x10){
+    //Last opperation Failed
     strcat(stringBuffer, " OPERR\n\r");
     uint8_t status[22] = {0};
     D_XCAM_ReadErrorParameter(status);
     D_XCAM_AnalyzeError(status);
+    *Error_Flag = true;
+    
   }
   if (OperationFlag & 0x20){
+    //Invalid Opperation Mode
     strcat(stringBuffer, " INVALID\n\r");
+    *Error_Flag = true;
   }
   //Print Data To HK
   //print(stringBuffer);
+
+
   *priorityData = PriorityData;
   //sprintf(stringBuffer, "\t\tPriority Data: %d\n\r", PriorityData);
   //print(stringBuffer);
@@ -475,12 +571,15 @@ uint8_t D_XCAM_GetStatus(uint8_t *status)
   if (D_XCAM_receive(status, 22, true))
     return 2;
 
+  if (status[4] == 0x92)
+        print("what");
+
   if (D_XCAM_RAWSTATUS)
   {
-    //fprintf(PAYLOAD, "Status: 0x");
-    //for (i=0; i<22; i++)
-      //fprintf(PAYLOAD, "%02x ", status[i]);
-    //fprintf(PAYLOAD, "\r");
+    fprintf(PAYLOAD, "Status: 0x");
+    for (i=0; i<22; i++)
+      fprintf(PAYLOAD, "%02x ", status[i]);
+    fprintf(PAYLOAD, "\r\n");
   }
   return 0;
 }    
@@ -495,7 +594,7 @@ uint8_t D_XCAM_GetStatus(uint8_t *status)
 uint8_t D_XCAM_ReadErrorParameter(uint8_t *status){
   uint8_t i;
   uint8_t txbuf[5] = {0};
-  char stringBuffer[100];
+  char stringBuffer[150] = {0};
   //Request Error Status
   txbuf[0] = 0x94;
   txbuf[1] = 1;
@@ -504,14 +603,14 @@ uint8_t D_XCAM_ReadErrorParameter(uint8_t *status){
 
   for (i=0;i<22;i++)
     status[i] = 0;
-  if(DEBUG)
-    print("Requesting camera error.\n\r");
+//  if(DEBUG)
+//    print("Requesting camera error.\n\r");
   if(D_XCAM_transmit(txbuf, 5)){
     print("Could not transmit\r\n");
     return 1;
   }
 
-  osDelay(3);
+  osDelay(4);
   if (D_XCAM_receive(status, 22, true)){
     print("Could not receive\r\n");
     return 2;
@@ -541,11 +640,12 @@ uint8_t D_XCAM_ReadErrorParameter(uint8_t *status){
 * @brief:Analyze the error status of the XCAM *
 * @param: status: pointer to where the error status lives
 * @retval: OperationFlag: The Curent Opperation Flag
+* @note Dont have time to figure out how to handle all the error Statuses properly will just reset the camera for now
 */
 uint16_t D_XCAM_AnalyzeError(uint8_t *status){
   //Allocate Memory for the error status
-  char stringBuffer[200];
-  print("Analyzing Error Status\n\r");
+  char stringBuffer[200] = {0};
+  strcat(stringBuffer, "Analyzing Error Status\n\r");
   uint16_t OperationFlag = (status[2] << 8) | status[3];
   
   if (OperationFlag & 0x01){
@@ -567,6 +667,7 @@ uint16_t D_XCAM_AnalyzeError(uint8_t *status){
     strcat(stringBuffer, " Invalid Parameter Combination\n\r"); 
   }
   print(stringBuffer);
+  
   return OperationFlag;
 }
 
@@ -586,10 +687,10 @@ uint8_t D_XCAM_GetImageSPI(uint8_t *buffer)
 
   D_XCAM_SetCRC(txbuf, 5);
   if (D_XCAM_DEBUG)
-    fprintf(PAYLOAD, "Sending SPI Download Command\n\r");
+    fprintf(PAYLOAD, "D");
   if (D_XCAM_transmit(txbuf, 5))
     return 1;
-  osDelay(3);
+  osDelay(6);
   
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
   SPI_ret = HAL_SPI_Receive(&hspi1, buffer, 260, 3000);
@@ -600,7 +701,7 @@ uint8_t D_XCAM_GetImageSPI(uint8_t *buffer)
   if (SPI_ret != HAL_OK)
   {
     fprintf(PAYLOAD,"\tSPI_Receive return was NOT HAL_OK\n\r");
-    HAL_Recovery_Tree(SPI_ret, 0);
+//    HAL_Recovery_Tree(SPI_ret, 0);
     return 2;
   }
 
@@ -608,7 +709,9 @@ uint8_t D_XCAM_GetImageSPI(uint8_t *buffer)
     return 3;
 
   if (D_XCAM_ValidateCRC(buffer, 260) == false)
-    fprintf(PAYLOAD, "WARNING: response failed CRC check\n\r");
+  {
+    fprintf(PAYLOAD, "CRC FAIL %x\r\n",buffer[0]);
+  }
   D_XCAM_PrintACKOrResponse(buffer, 260);
   return 0;
 }
@@ -636,7 +739,6 @@ uint8_t D_XCAM_GetImageI2C(uint8_t *buffer){
     return 2;
 
   D_XCAM_PrintACKOrResponse(buffer, 260);
-  int len = 260;
   
   return 0;
 }
@@ -690,7 +792,7 @@ uint8_t D_XCAM_SendInitOrUpdate(bool init, bool imagingmode)
   else
   {
     if (D_XCAM_DEBUG)
-      fprintf(PAYLOAD, "Sending Update Command");
+      fprintf(PAYLOAD, "Sending Update Command\r\n");
     txbuf[0] = 0x92;
   }
   txbuf[1] = 1;
@@ -775,7 +877,8 @@ uint8_t D_XCAM_SetParameter(uint8_t ID, uint16_t value)
  * @param ID : Parameter to set
  * @return (1) if it did not transmit (2) issue it ded not recieve (0)everything Went Well
  */
-const char * D_XCAM_GetParameter(uint8_t ID){
+/*
+char * D_XCAM_GetParameter(uint8_t ID){
   uint8_t i;
   uint8_t txbuf[5] = {0};
   uint8_t status[22] = {0};
@@ -799,7 +902,7 @@ const char * D_XCAM_GetParameter(uint8_t ID){
 
   osDelay(3);
 
-  const char Parameter[50] = {0};
+  char Parameter[50] = {0};
   char tempBuffer[20];
   if (D_XCAM_receive(status, 22, true)){
       sprintf(Parameter,"Could not receive\r\n");
@@ -809,14 +912,16 @@ const char * D_XCAM_GetParameter(uint8_t ID){
   if (D_XCAM_RAWSTATUS){
     sprintf(Parameter, "Status: 0x");
     for (i=0; i<22; i++)
-      spritntf(tempBuffer, "%02x ", status[i]);
+    {
+      sprintf(tempBuffer, "%02x ", status[i]);
       strcat(Parameter,tempBuffer);
+    }
     strcat(Parameter, "\r\n");
   }
 
   return Parameter;
 }
-
+*/
 
 void D_XCAM_SetCRC(uint8_t* data, size_t len)
 // length of total packet including CRC
@@ -904,8 +1009,8 @@ uint8_t D_XCAM_transmit(uint8_t *buffer, size_t len)
   if (ret != HAL_OK)
   {
     fprintf(PAYLOAD,"\tXCAM_transmit return was NOT HAL_OK\n\r");
-    fprintf(PAYLOAD, "\tAttempting to recover HAL");
-    HAL_Recovery_Tree(ret);
+//    fprintf(PAYLOAD, "\tAttempting to recover HAL");
+//    HAL_Recovery_Tree(ret);
     //Jump to HAL recovery
     return ret;
   }
@@ -915,7 +1020,7 @@ uint8_t D_XCAM_transmit(uint8_t *buffer, size_t len)
 
 uint8_t D_XCAM_receive(uint8_t *buffer, size_t len, bool ack)
 {
-  fprintf(PAYLOAD, "\tXCAM_receive\n\r");
+//  fprintf(PAYLOAD, "\tXCAM_receive\n\r"); // this probably slows things down
   HAL_StatusTypeDef ret = HAL_ERROR;
   uint8_t buf[5] = {0};
   if (len > 0)
@@ -927,7 +1032,7 @@ uint8_t D_XCAM_receive(uint8_t *buffer, size_t len, bool ack)
     if (ret != HAL_OK)
     {
       fprintf(PAYLOAD,"\tXCAM_receive return was NOT HAL_OK\n\r");
-      HAL_Recovery_Tree(ret);
+//      HAL_Recovery_Tree(ret);
       return ret;
     }
     
@@ -935,7 +1040,10 @@ uint8_t D_XCAM_receive(uint8_t *buffer, size_t len, bool ack)
     if ((len == 260) && (buffer[0] = 0x91))
         buffer[0] = 0x95;
     if (D_XCAM_ValidateCRC(buffer, len) == false)
-      fprintf(PAYLOAD, "WARNING: response failed CRC check\n\r");
+    {
+      print("WARNING: response failed CRC check\n\r");
+      //fprintf(PAYLOAD,"%x\n",buffer[0]);
+    }
   }
   //For Type 2 PackagesWe need to Send an Ack
   if (ack) // if we need to send an acknowledgement packet
@@ -952,7 +1060,7 @@ uint8_t D_XCAM_receive(uint8_t *buffer, size_t len, bool ack)
     if (ret != HAL_OK)
     {
       fprintf(PAYLOAD,"\tACK return was NOT HAL_OK\n\r");
-      HAL_Recovery_Tree(ret);
+//      HAL_Recovery_Tree(ret);
       return 2;
     }
   }
@@ -971,7 +1079,7 @@ void D_XCAM_WaitSeconds(uint16_t numSeconds, bool verbose)
     osDelay(100);
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
     if ((verbose) && ((ii%10) == 0))
-      fprintf(PAYLOAD,"--%d--",ii/10);
+      fprintf(PAYLOAD,"-%d ",ii/10);
   }
   if (verbose)
     fprintf(PAYLOAD,"\n\r");
@@ -981,7 +1089,6 @@ void D_XCAM_WaitSeconds(uint16_t numSeconds, bool verbose)
 
 void D_XCAM_PrintACKOrResponse(uint8_t *buffer, size_t len)
 {
-    uint16_t i;
   if ((len == 5) && (buffer[2] == 0x7e))
   {
     fprintf(PAYLOAD, "Response: ACK\n\r");
@@ -989,6 +1096,7 @@ void D_XCAM_PrintACKOrResponse(uint8_t *buffer, size_t len)
   else
   {
     #ifdef DEBUG
+//      uint16_t i;
       //fprintf(PAYLOAD, "Response: 0x");
       //for (i=0; i<len; i++)
           //fprintf(PAYLOAD, "%02x ", buffer[i]);

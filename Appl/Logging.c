@@ -5,11 +5,11 @@
 
 
 //Define Global
-const char HouseKeepingName[10];
+char HouseKeepingName[10];
 bool HouseKeeping_File_Created = false;
 
 /**
- * @brief : This weill make the File System For the SD Card
+ * @brief : This we'll make the File System For the SD Card
  * @retval: (1) if it fails to Make the File System
  *          (2) if it fails to Make the Unique Run ID Dir
  *          (3) if it fails to Make the HouseKeeping File
@@ -56,7 +56,7 @@ uint8_t Setup_SD(void){
  * @retval: (1) if it fails to Make the File 
  *          (0) if it successfully makes the File
  */
-uint8_t Make_HouseKeeping(const char *FileName){
+uint8_t Make_HouseKeeping(char *FileName){
     
     if(SD_Make_File(FileName)){
         print("Couldn't make HK file\r\n");
@@ -70,11 +70,11 @@ uint8_t Make_HouseKeeping(const char *FileName){
 
 /****************************************************************
  * @brief : This Print to the Comport or will write to the Houskeeping File if its setup
- * @param : *String: Const Char string to print and Write.
+ * @param : *String: Char string to print and Write.
  * @retval: (1) if it fails
  *          (0) if its successful
  ****************************************************************/
-uint8_t print(const char *String){
+uint8_t print(char *String){
     uint8_t status = 0;
     //If the HK file is setup write to it
     if(HouseKeeping_File_Created){
@@ -96,7 +96,7 @@ uint8_t print(const char *String){
  * @retval: (1) if it fails to write to the file
  *          (0) if it successfully writes to the file
  * ***************************************************************/
-uint8_t Write_To_HK(const char *String){
+uint8_t Write_To_HK(char *String){
     //Prefix date Time to String
     char  timeStr[100];
     HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
@@ -127,9 +127,9 @@ uint8_t Write_To_HK(const char *String){
  *          (0) if it successfully finds the next available file name
  *         
  * ***************************************************************/
- uint8_t get_next_housekeeping_file_id(const char *String){
+ uint8_t get_next_housekeeping_file_id(char *String){
     uint16_t filename_iter = 0;
-    const char filename[10];
+    char filename[10];
     bool found_filename = false;
 
     //Chack for A new File name by incrementally Checking Each File Name in the System.
@@ -143,7 +143,7 @@ uint8_t Write_To_HK(const char *String){
     }
     //Get the list of files in the system
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-    const char buffer[50];
+    char buffer[50];
     sprintf(buffer, "Found Free File Name: %s\r\n", filename);
     print(buffer);
     sprintf(String, "%s", filename);
@@ -159,23 +159,25 @@ uint8_t Write_To_HK(const char *String){
  * @retval: (1) if it fails to find the next available file name
  *         (0) if it successfully finds the next available file name
  * ***************************************************************/
-uint8_t get_next_image_id(const char *ImageFileName, const char *HeaderFileName){
-    uint8_t filename_iter = 0;
-    const char image_filename[10];
-    const char header_filename[10];    
+uint8_t get_next_image_id(char *ImageFileName, char *HeaderFileName){
+    uint16_t filename_iter = 0;
+    char image_filename[10] ="";
+    char header_filename[10] ="";
     bool found_filename = false;
-    //incrementally Check each Used File Name in the System.
+    //incrementally Check each Used File Name in the System this will take awhile.
     while(!found_filename){
         sprintf(image_filename, "%05d.raw", filename_iter);
         if(SD_File_Exists(&image_filename[0])==0){
+
             found_filename = true;
         }else{
+            TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
             filename_iter++;
         }
     }
     //Assign The image File name and the Header File Name
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-    const char buffer[50];
+    char buffer[50]="";
     sprintf(header_filename, "%05d.txt", filename_iter);
     sprintf(buffer, "Found Free File Name: %s\r\n", image_filename);
     print(buffer);
