@@ -1,0 +1,39 @@
+The IS1 board acts as an I2C peripheral on the "Payload I2C" lines from the Endurosat bus. These lines come in as I2C1 on the IS1 microcontroller. All data is buffered in the microcontroller so there shouldn't be any delays in returning data.
+
+Data is sent bigendian. I2C address of IS1 is 0x23 (7 bit addressing mode).
+
+All packets are 6 bytes: [I2C Address and R/W bit] [COMMAND byte] [4-byte VALUE]
+
+See the I2C Register Description file for command numbers.
+
+Set a value in register 0xff:
+{
+  uint32_t val       = 525600;
+  uint16_t addr      = 0x23;
+  uint8_t  buffer[5] = {0};
+  uint8_t  command   = 0xf0;
+
+  buffer[0] = command;
+  buffer[1] = (val >> 24) & 0xff;
+  buffer[2] = (val >> 16) & 0xff;
+  buffer[3] = (val >> 8) & 0xff;
+  buffer[4] = val & 0xff;
+
+  HAL_I2C_Master_Transmit(&i2c_handle, addr<<1, buffer, 5, 100);
+}
+
+Read a value from the 0x2d register:
+{
+  uint32_t val;
+  uint16_t addr      = 0x23;
+  uint8_t  buffer[5] = {0};
+  uint8_t  command   = 0x2d;
+
+  buffer[0] = command;
+  HAL_I2C_Master_Transmit(&i2c_handle, addr<<1, buffer, 5, 100);
+  HAL_I2C_Master_Receive(&i2c_handle, addr<<1 | 1, buffer, 5, 100);
+
+  val = (buffer[1] << 24) | (buffer[2] << 16) | (buffer[3] << 8) | buffer[4];
+}
+
+You can check that buffer[0] == command after the receive to verify the response is what you wanted.

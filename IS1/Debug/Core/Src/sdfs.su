@@ -1,0 +1,11 @@
+sdfs.c:15:6:SDFS_FindNewDirectory	24	static
+sdfs.c:26:9:SDFS_MakeDir	24	static
+sdfs.c:45:6:SDFS_SetupFS	24	static
+sdfs.c:61:6:SDFS_IncrementDirectory	24	static
+sdfs.c:72:6:SDFS_PowerCycle	8	static
+sdfs.c:80:9:SDFS_Mount	32	static
+sdfs.c:115:9:SDFS_WriteSpectra	856	static
+sdfs.c:163:9:SDFS_WriteString	704	static
+sdfs.c:186:9:SDFS_WriteEnvironmental	968	static
+sdfs.c:221:9:SDFS_WriteCoords	1032	static
+sdfs.c:253:9:SDFS_WriteSpectraBinary	800	static

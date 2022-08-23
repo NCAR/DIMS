@@ -1,0 +1,4 @@
+TMP117.c:14:6:TMP117_InitStruct	32	static
+TMP117.c:34:6:TMP117_Configure	32	static
+TMP117.c:43:6:TMP117_GetTemperature	56	static
+TMP117.c:93:6:I2C2_State	16	static

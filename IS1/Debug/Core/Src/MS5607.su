@@ -1,0 +1,6 @@
+MS5607.c:21:6:MS5607_StartConversion	32	static
+MS5607.c:28:10:MS5607_ReadADC	32	static
+MS5607.c:38:10:MS5607_ReadCoeff	32	static
+MS5607.c:48:6:MS5607_GetCoefficients	24	static
+MS5607.c:55:6:MS5607_CalculatePressure	96	static
+MS5607.c:86:6:InitMS5607	16	static

@@ -1,0 +1,9 @@
+funcs.c:17:10:GetMilliseconds	48	static
+funcs.c:37:6:InitState	24	static
+funcs.c:52:6:SetHeater	16	static
+funcs.c:61:5:parse_comma_delimited_str	32	static
+funcs.c:72:6:USBSendString	24	static
+funcs.c:84:6:InitDWTTimer	4	static
+funcs.c:91:6:Delay_us	24	static
+funcs.c:100:9:UIntToInt	24	static
+funcs.c:106:10:IntToUInt	24	static

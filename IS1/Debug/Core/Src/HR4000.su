@@ -1,0 +1,14 @@
+HR4000.c:35:9:HR_Execute	128	static
+HR4000.c:187:9:HR_ValidateData	24	static
+HR4000.c:242:6:HR_InitStruct	16	static
+HR4000.c:258:6:HR_ClearBuffer	40	static
+HR4000.c:267:9:HR_SetBinaryMode	24	static
+HR4000.c:301:9:HR_SendCommand	32	static
+HR4000.c:332:9:HR_SetIntegrationTime	24	static
+HR4000.c:345:9:HR_SetSumming	24	static
+HR4000.c:357:9:HR_SetSmoothing	24	static
+HR4000.c:369:9:HR_ClearMemory	24	static
+HR4000.c:379:9:HR_SetTriggerMode	24	static
+HR4000.c:391:9:HR_TriggerSpectra	40	static
+HR4000.c:403:9:HR_SetChecksumMode	24	static
+HR4000.c:413:9:HR_AnalyzeSpectra	48	static
