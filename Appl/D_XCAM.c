@@ -90,11 +90,13 @@ uint8_t D_XCAM_GetEntireImageSPI(){
     print(buffer);
     
     //Keep requewsting packets until we have them all or until its getting Absurd
+    //This Take Forever mostly BC I am writing every file to buffer individually
     while((packetsRemaining>0)&&(num_download_requests<max_download_requests)){
       D_XCAM_GetImageSPI(&ImagePacket[0]);
       TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
       SD_Append_Data_File(Image_FileName, ImagePacket, sizeof(ImagePacket));
       D_XCAM_GetStatus(status);
+
       //Write to the Header File for the image
       D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
       if(Error_Flag == true){
@@ -384,7 +386,6 @@ void D_XCAM_Example(void){
     D_XCAM_GetStatus(D_XCAM_Status);
   }while (!(D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag) & 0x02));
 
-
   fprintf(PAYLOAD, "Image captured!\r\n");
 // 11) The payload data packets waiting will be incremented as the payload returns to standby, to reflect the image packets waiting in the payload memory.
 // 12) Provided the default parameters are still loaded, the data packets waiting will contain an uncompressed thumbnail image and a compressed, unwindowed full image.
@@ -535,7 +536,6 @@ uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData, bool *Err
   }
   //Print Data To HK
   //print(stringBuffer);
-
 
   *priorityData = PriorityData;
   //sprintf(stringBuffer, "\t\tPriority Data: %d\n\r", PriorityData);

@@ -89,6 +89,13 @@ void XCAM_Run()
         CheckVoltage();
         EPS_check(1,1);
 
+    while(++total_captures < 30)
+    {
+        ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
+                                     gps, 32, 100);
+        fprintf(PAYLOAD, "GPS %s\r\n", gps);
+        osDelay(9);
+        CheckVoltage();
         // set exposure time
         Adjust_Exposure(Exposures[Exposure]);
         for (i=0; i<4; i++)

@@ -22,6 +22,7 @@ void EPS_check(int printToFile, int printToPayload ) {
     float BCRVconv = 2.34;
     float BCRCconv = 1.523;
     char battery_text[500];
+
     long Defaults;
     //float voltZconv = 2.4414063;
     char  timeStr[25];
@@ -42,6 +43,7 @@ void EPS_check(int printToFile, int printToPayload ) {
 
     EPS_read(43,&Defaults);
     fprintf(PAYLOAD, "Default Value %li\r\n", Defaults);
+
     HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
     HAL_RTC_GetDate(&hrtc,&sDate,calendar_format);
     sprintf(timeStr,"%04d-%02d-%02d %02d:%02d:%02d",
