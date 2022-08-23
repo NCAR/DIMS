@@ -24,7 +24,7 @@ uint16_t D_XCAM_AnalyzeError(uint8_t *status);
 void D_XCAM_Power_On(void);
 void D_XCAM_Power_Off(void);
 uint8_t D_XCAM_ReadParameter(void);
-void Adjust_Exposure(uint8_t setting);
+void Adjust_Exposure(uint16_t setting);
 const char * D_XCAM_GetParameter(uint8_t ID);
 uint8_t D_XCAM_BeginExposure();
 void D_XCAM_Power_Cycle(void);

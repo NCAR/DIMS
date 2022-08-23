@@ -11,14 +11,17 @@ void CheckVoltage()
     EPS_getBattery_voltage(&Voltage);
     //Check the Battery Level it its low take a break
     char buffer[100];
+    EPS_check(1,1);
     sprintf(buffer, "Current EPS Voltage: %.3f\n\r", Voltage);
     print(buffer);
-    if(Voltage<3.70){
+    if(Voltage<3.6){
+        EPS_check(1,1);
         D_XCAM_Power_Off();
-        while(Voltage<4.0){
+        EPS_check(1,1);
+        while(Voltage<3.9){
             print("Waiting For Battery to recharge.\r\n");
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
-            osDelay(20000);
+            osDelay(10000);
             sprintf(buffer, "Current EPS Voltage: %.3f\n\r", Voltage);
             print(buffer);
             EPS_check(1,1);
@@ -78,6 +81,18 @@ void XCAM_Run()
     {
         ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
                                      gps, 32, 100);
+        char buffer[50] = {0};
+        sprintf(buffer, "GPS %s\r\n", gps);
+        print(buffer);
+
+        osDelay(9);
+        CheckVoltage();
+        EPS_check(1,1);
+
+    while(++total_captures < 30)
+    {
+        ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
+                                     gps, 32, 100);
         fprintf(PAYLOAD, "GPS %s\r\n", gps);
         osDelay(9);
         CheckVoltage();
@@ -124,7 +139,6 @@ void XCAM_Run()
 
         //Get the Exposure to a file
         print("Image Capture Complete\r\n");
-        char buffer[50];
         sprintf(buffer, "Writing Exposure: %i\r\n", Exposures[Exposure]);
         print(buffer);
         D_XCAM_SendInitOrUpdate(false, false);

@@ -100,7 +100,6 @@ uint8_t D_XCAM_GetEntireImageSPI(){
       //Write to the Header File for the image
       D_XCAM_AnalyzeStatus(status, &packetsRemaining, &Error_Flag);
       if(Error_Flag == true){
-        print("There was an error when processing the IMage\r\n");
         return 1;
       }
       
@@ -321,7 +320,7 @@ uint8_t D_XCAM_BeginExposure(){
   * @param  setting : Duration of Exposure in units of 157us Note: if set to '0' the camera will use Auto Exposure
   * @retval none
   */
-void Adjust_Exposure(uint8_t setting){
+void Adjust_Exposure(uint16_t setting){
     char buffer[50];
     if(setting == 0){
         // set auto-exposure mode
@@ -538,10 +537,6 @@ uint16_t D_XCAM_AnalyzeStatus(uint8_t *status, uint16_t *priorityData, bool *Err
   //Print Data To HK
   //print(stringBuffer);
 
-  if (*Error_Flag == true){
-    print("An Error Happened When Analyzing the Status Code\n\r");
-    print(stringBuffer);
-  }
   *priorityData = PriorityData;
   //sprintf(stringBuffer, "\t\tPriority Data: %d\n\r", PriorityData);
   //print(stringBuffer);
@@ -695,7 +690,7 @@ uint8_t D_XCAM_GetImageSPI(uint8_t *buffer)
     fprintf(PAYLOAD, "D");
   if (D_XCAM_transmit(txbuf, 5))
     return 1;
-  osDelay(4);
+  osDelay(6);
   
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
   SPI_ret = HAL_SPI_Receive(&hspi1, buffer, 260, 3000);
@@ -717,7 +712,6 @@ uint8_t D_XCAM_GetImageSPI(uint8_t *buffer)
   {
     fprintf(PAYLOAD, "CRC FAIL %x\r\n",buffer[0]);
   }
-
   D_XCAM_PrintACKOrResponse(buffer, 260);
   return 0;
 }
