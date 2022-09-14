@@ -6,7 +6,7 @@ import struct
 from pathlib import Path
 from scipy.signal import savgol_filter
 
-paths = Path('/users/mjeffers/Desktop/IS1/IS1').glob('*')
+paths = Path('C:\\Users\\mjeffers\\Desktop\\DIMS Ft.Sumner\\IS1').glob('*')
 window=5 # This is a window of 5
 #go through Paths
 for path in paths:
