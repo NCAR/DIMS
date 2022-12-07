@@ -101,11 +101,11 @@ uint8_t Write_To_HK(char *String){
     char  timeStr[100];
     HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
     HAL_RTC_GetDate(&hrtc,&sDate,calendar_format);
-    sprintf(timeStr,"%04d-%02d-%02d %02d:%02d:%02d",
+    sprintf(timeStr,"%04d-%02d-%02d,%02d:%02d:%02d",
         sDate.Year,sDate.Month,sDate.Date,sTime.Hours,sTime.Minutes,sTime.Seconds);
 
     
-    strcat(timeStr, ": ");
+    strcat(timeStr, ":,");
     strcat(timeStr, String);
     //Write to File
     if(SD_Append_String_File(HouseKeepingName, &timeStr[0], strlen(timeStr))){
