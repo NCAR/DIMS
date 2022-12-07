@@ -26,7 +26,7 @@ thm_raw  = np.zeros((tsz,), dtype=np.uint8   )
 plt.close('all')
 fig, ax = plt.subplots()
 
-files = glob.glob("C:\\Users\\mjeffers\\Desktop\\DIMS Ft.Sumner\\OBC\\*.raw")
+files = glob.glob("C:\\HAO-IG\\DIMS\\Testing\\10 Minute Test 7-Dec-2022\\OBC\\*.RAW")
 for  filenm in files:
     print('Reading: ',filenm)
     with open(filenm, 'rb') as fid:
@@ -65,9 +65,9 @@ for  filenm in files:
 
                 elif image_ID == 4 or image_ID == 5:
                     thm_raw[tt:tt+imStep] = rawdata[imBeg+tpay:stepsz+tpay]
-                    if (tpay < (stepsz*6) ):
+                    #if (tpay < (stepsz*6) ):
                         ## print out a few values to insure sync
-                        print('tmm_raw                             ',tmm_raw[ii:ii+7])
+                       # print('tmm_raw                             ',tmm_raw[ii:ii+7])
                     tt = tt + imStep
 
 

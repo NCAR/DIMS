@@ -27,7 +27,8 @@ thm_raw  = np.zeros((tsz,), dtype=np.uint8   )
 plt.close('all')
 fig, ax = plt.subplots()
 ###EDIT THIS FOLLOWING LINE TO POINT TO YOUR FOLDER##### OUTPUT WILL LIVE HERE TOO
-files = glob.glob("C:\\Users\mjeffers\Desktop\OBC\\*.RAW");
+files = glob.glob("C:\\HAO-IG\\DIMS\\Testing\\10 Minute Test 7-Dec-2022\\OBC\\*.RAW")
+print(f"Files: {files}")
 #files = glob.glob("D:\\011*.RAW")
 for filenm in files:
     print('Reading: ',filenm)
@@ -87,9 +88,9 @@ for filenm in files:
             img_rev = np.fliplr(np.flipud(img))
 
             print('displaying: ',filenm)
-            print(img_rev)
+            #print(img_rev)
             ## Display the image
-            img_rev
+            #img_rev
             with open(f'{filenm.strip(".RAW")}.csv', 'w', encoding='UTF8', newline='') as f:
                 writer = csv.writer(f)
                 # write multiple rows
