@@ -1,2 +1,16 @@
 
 *.png
+OBC/Debug/OBC_SDK.elf
+OBC/Debug/OBC_SDK.hex
+OBC/Debug/output.map
+OBC/OBC_SDK Debug.cfg
+OBC/OBC_SDK Release.cfg
+OBC/Release/OBC_SDK.bin
+OBC/Release/OBC_SDK.elf
+OBC/Release/OBC_SDK.hex
+OBC/Release/output.map
+OBC/OBC_SDK Debug.cfg
+OBC/OBC_SDK Release.cfg
+OBC/Release/output.map
+OBC/Release/output.map
+OBC/OBC_SDK Release.cfg

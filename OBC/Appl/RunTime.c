@@ -89,6 +89,7 @@ void XCAM_Run()
         CheckVoltage();
         EPS_check(1,1);
 
+//Check-out Curly Bracket issues here
     while(++total_captures < 30)
     {
         ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
@@ -149,5 +150,6 @@ void XCAM_Run()
         D_XCAM_SendInitOrUpdate(false, true);
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
     }
+}
 }
 
