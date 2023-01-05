@@ -98,7 +98,6 @@ uint8_t print(char *String){
  * ***************************************************************/
 uint8_t Write_To_HK(char *String){
     //Prefix date Time to String
-
     char  timeStr[100];
     HAL_RTC_GetTime(&hrtc,&sTime,calendar_format);  // must be before GetDate
     HAL_RTC_GetDate(&hrtc,&sDate,calendar_format);
