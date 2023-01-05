@@ -8,7 +8,8 @@ from scipy.signal import savgol_filter
 
 
 ########################EDIT PATH HERE###############################################################
-paths = Path('C:\\HAO-IG\\DIMS\\Testing\\29-Dec-2022b\\IS1').glob('*')
+
+paths = Path('C:\\HAO-IG\DIMS\\Testing\\29-Dec-2022\\IS1').glob('*')
 #go through Paths
 for path in paths:
 
