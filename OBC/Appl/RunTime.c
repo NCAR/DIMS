@@ -47,11 +47,11 @@ void XCAM_Run()
     //Exposure Settings
     uint8_t len = 5;
     uint16_t Exposures[5]= {0};
-    Exposures[0] = 0;//Set Exposure to Auto
-    Exposures[1] = 80; //in units of 63uS
-    Exposures[2] = 159;
-    Exposures[3] = 238;
-    Exposures[4] = 317;
+    //Exposures[0] = 0;//Set Exposure to Auto
+    Exposures[1] = 64; //in units of 63uS
+    Exposures[2] = 32;
+    Exposures[3] = 16;
+    Exposures[4] = 8;
     //Turn on Fast Charge on the EPS
     EPS_write(9, 1);
     EPS_write(8, 1);
