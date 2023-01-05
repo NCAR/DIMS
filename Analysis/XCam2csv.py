@@ -27,7 +27,7 @@ thm_raw  = np.zeros((tsz,), dtype=np.uint8   )
 plt.close('all')
 fig, ax = plt.subplots()
 ###EDIT THIS FOLLOWING LINE TO POINT TO YOUR FOLDER##### OUTPUT WILL LIVE HERE TOO
-files = glob.glob("C:\\HAO-IG\\DIMS\\Testing\\10 Minute Test 7-Dec-2022\\OBC\\*.RAW")
+files = glob.glob("C:\\HAO-IG\\DIMS\\Testing\\29-Dec-2022b\\OBC\\*.RAW")
 print(f"Files: {files}")
 #files = glob.glob("D:\\011*.RAW")
 for filenm in files:
