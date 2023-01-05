@@ -77,17 +77,8 @@ void XCAM_Run()
 
     uint8_t total_captures = 0;
 
-    while(++total_captures < 30)
-    {
-        ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
-                                     gps, 32, 100);
-        char buffer[50] = {0};
-        sprintf(buffer, "GPS %s\r\n", gps);
-        print(buffer);
+    CheckVoltage();
 
-        osDelay(9);
-        CheckVoltage();
-        EPS_check(1,1);
 
 //Check-out Curly Bracket issues here
     while(++total_captures < 30)
@@ -97,6 +88,7 @@ void XCAM_Run()
         fprintf(PAYLOAD, "GPS %s\r\n", gps);
         osDelay(9);
         CheckVoltage();
+        EPS_check(1,1);
         // set exposure time
         Adjust_Exposure(Exposures[Exposure]);
         for (i=0; i<4; i++)
@@ -140,6 +132,7 @@ void XCAM_Run()
 
         //Get the Exposure to a file
         print("Image Capture Complete\r\n");
+        char buffer[100];
         sprintf(buffer, "Writing Exposure: %i\r\n", Exposures[Exposure]);
         print(buffer);
         D_XCAM_SendInitOrUpdate(false, false);
@@ -151,5 +144,5 @@ void XCAM_Run()
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
     }
 }
-}
+
 
