@@ -1,8 +1,9 @@
 /*
  * MS5607.c
- *
+ *  MS5607-02BA03 Pressure Sensor Driver
  *  Created on: Apr 20, 2021
  *      Author: damonb
+ *   Edited by mjeffers
  */
 
 /*
@@ -18,6 +19,12 @@
 #include "MS5607.h"
 #include <math.h>
 
+
+/******
+ * @brief Starts the Connection with the MS5607
+ * @param i2c: pointer to the I2C_HandleTypeDef struct
+ * @param temp: boolean to select temperature or pressure
+*/
 void MS5607_StartConversion(I2C_HandleTypeDef* i2c, bool temp)
 {
   uint8_t outbuffer[1] = {0};
@@ -25,6 +32,12 @@ void MS5607_StartConversion(I2C_HandleTypeDef* i2c, bool temp)
   HAL_I2C_Master_Transmit(i2c, MS5607_ADDR << 1, outbuffer, 1, 100);
 }
 
+
+/******************
+ * @brief Reads the ADC value from the MS5607
+ * @param i2c: pointer to the I2C_HandleTypeDef struct
+ * @return: the ADC value
+*/
 uint32_t MS5607_ReadADC(I2C_HandleTypeDef* i2c)
 {
   uint8_t outbuffer[1] = {0};
@@ -35,6 +48,13 @@ uint32_t MS5607_ReadADC(I2C_HandleTypeDef* i2c)
   return ((inbuffer[0] << 16) | (inbuffer[1] << 8) | inbuffer[2]);
 }
 
+
+/*******************
+ * @brief Reads the calibration coefficient from the MS5607
+ * @param i2c: pointer to the I2C_HandleTypeDef struct
+ * @param coeff_number: the coefficient number to read
+ * @return: the coefficient value
+*/
 uint16_t MS5607_ReadCoeff(I2C_HandleTypeDef* i2c, uint8_t coeff_number)
 {
   uint8_t outbuffer[1] = {0};
@@ -45,6 +65,12 @@ uint16_t MS5607_ReadCoeff(I2C_HandleTypeDef* i2c, uint8_t coeff_number)
   return ((inbuffer[0] << 8) | inbuffer[1]);
 }
 
+
+/********************
+ * @brief Gets the Calibration Coefficients from the MS5607
+ * @param i2c: pointer to the I2C_HandleTypeDef struct
+ * @param ms: pointer to the sMS5607 struct
+*/
 void MS5607_GetCoefficients(I2C_HandleTypeDef* i2c, struct sMS5607* ms)
 {
   int i;
@@ -52,6 +78,14 @@ void MS5607_GetCoefficients(I2C_HandleTypeDef* i2c, struct sMS5607* ms)
     ms->C[i] = MS5607_ReadCoeff(i2c, i);
 }
 
+
+/********************
+ * @brief Gets the Temperature and Pressure from the MS5607
+ * @param i2c: pointer to the I2C_HandleTypeDef struct
+ * @param ms: pointer to the sMS5607 struct
+ * @param temp: pointer to the temperature variable
+ * @param pressure: pointer to the pressure variable
+*/
 void MS5607_CalculatePressure(struct sMS5607* ms, int32_t* temp, int32_t* pressure)
 {
   double dT, TEMP, OFF, SENS, P, T2, SENS2, OFF2;
@@ -83,6 +117,11 @@ void MS5607_CalculatePressure(struct sMS5607* ms, int32_t* temp, int32_t* pressu
   *pressure = P;
 }
 
+
+/********************
+ * @brief initailizes the MS5607 structure to all zeros
+ * @param ms: pointer to the sMS5607 struct
+*/
 void InitMS5607(struct sMS5607* ms)
 {
   ms->D[0]=0;

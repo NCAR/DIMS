@@ -1,8 +1,10 @@
 /*
  * PID.c
- *
+ * PID controller library for caluclating the effort to apply to a system to reach a target
+ * 
  *  Created on: Aug 10, 2021
  *      Author: damonb
+ *     Edited by mjeffers
  */
 
 /*
@@ -17,6 +19,11 @@ struct sPID
 
 #include "pid.h"
 
+
+/*****
+ * @brief Initialize the PID structure to all zeros
+ * @param s: pointer to the PID structure
+*/
 void PID_InitStruct(struct sPID* s)
 {
   uint8_t i;
@@ -31,6 +38,12 @@ void PID_InitStruct(struct sPID* s)
     s->LastP[i]=0.0f;
 }
 
+
+/*****
+ * @brief Save the current position to the history
+ * @param s: pointer to the PID structure
+ * @param p: the current position
+*/
 void PID_SavePoint(struct sPID* s, float p)
 {
 //  memmove((void*) *(s->LastP[1]),(void*) *(s->LastP[0]), sizeof(s->LastP)*(POSITIONHISTORY-1));
@@ -40,6 +53,12 @@ void PID_SavePoint(struct sPID* s, float p)
   s->LastP[0] = p;
 }
 
+
+/*****
+ * @brief Calculate the proportional error
+ * @param s: pointer to the PID structure
+ * @return the proportional error
+*/
 float PID_SumError(struct sPID* s)
 {
   s->IntegratorCount++;
@@ -59,14 +78,30 @@ float PID_SumError(struct sPID* s)
   return err;
 }
 
-// we may want to improve this later
+
+/******
+ * @brief Calculate the velocity of the system
+ * @param s: pointer to the PID structure
+ * @return the velocity of the system
+ * @note this is a very simple calculation that just looks at the last 4 points
+ *       and calculates the velocity over the last 4*DeltaT seconds
+ *       this is not a very good way to calculate velocity, but it is simple
+ *       and works well enough for our purposes
+ * 
+*/
+
 float PID_Velocity(struct sPID* s)
 {
   uint8_t periods = 4;
   return (s->LastP[0]-s->LastP[periods])/(s->DeltaT*periods);
 }
 
-// calculate the error and return a value between 0 and 1
+/*****
+ * @brief Calculate the effort to apply to the system
+ * @param s: pointer to the PID structure
+ * @param p: the current position
+ * @return the effort to apply to the system between 0 and 1
+*/
 float PID_Effort(struct sPID* s, float p)
 {
   if (s->TargetP == 0)

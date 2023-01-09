@@ -5,6 +5,9 @@
 #include "defs.h"
 //#include <time.h>
 #include "Logging.h"
+//This File Will handle all the SD Card Functions
+// Author mjeffers@ucar.edu
+
 
 /**
  * @brief This Function Makes the House Keeping File

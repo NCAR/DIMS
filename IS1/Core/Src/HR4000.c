@@ -1,8 +1,9 @@
 /*
  * HR4000.c
- *
+ * This File contains the functions to process the HR4000 data
  *  Created on: Dec 29, 2020
  *      Author: damonb
+ * edited by mjeffers
  */
 
 #include "defs.h"
@@ -31,15 +32,25 @@
  */
 
 
-
+/*******
+ * @brief Executes the HR4000 state machine
+ * @param state: pointer to the state struct
+ * @param HR: pointer to the HR4000 struct
+ * @param Spectra: pointer to the Spectra struct
+ * @param gps: pointer to the GPS frame struct
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_Execute(struct sState *state, struct sHR4000 *HR, struct sSpectra *Spectra, struct sGPSFrame *gps)
 {
+  
   uint8_t buffer[100];
+  //if the HR4000 needs to Delay, do so
   if (HR->Delay)
   {
     HR->Delay--;
     return 0;
   }
+
   if (HR->State < 5)
     HR->GetSpectra = false;
 
@@ -184,6 +195,13 @@ uint8_t HR_Execute(struct sState *state, struct sHR4000 *HR, struct sSpectra *Sp
   return 0;
 }
 
+
+/************
+ * @brief Checks the HR4000 data for errors
+ * @param HR: pointer to the HR4000 struct
+ * @param Spectra: pointer to the Spectra struct
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_ValidateData(struct sHR4000 *HR, struct sSpectra *Spectra)
 {
   uint8_t i;
@@ -239,6 +257,11 @@ uint8_t HR_ValidateData(struct sHR4000 *HR, struct sSpectra *Spectra)
 // "In binary mode alldata, except where noted, passes as 16-bit unsigned integers (WORDs)
 // with the MSB followed by the LSB."
 
+/*****************
+ * @brief Initalize the HR4000 struct
+ * @param HR4000: pointer to the HR4000 struct
+ * @retval None
+*/
 void HR_InitStruct(struct sHR4000 *HR4000)
 {
   HR4000->UART = &huart1;
@@ -255,6 +278,12 @@ void HR_InitStruct(struct sHR4000 *HR4000)
   HR4000->DataReady = false;
 }
 
+
+/*****************
+ * @brief Celar the Buffer on board the HR4000
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @retval None
+*/
 void HR_ClearBuffer(UART_HandleTypeDef *huart)
 {
   uint8_t result = 1;
@@ -264,6 +293,11 @@ void HR_ClearBuffer(UART_HandleTypeDef *huart)
     result = !(HAL_UART_Receive(huart, buffer, 20, 3));
 }
 
+/*****************
+ * @brief Set the HR4000 to binary mode
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_SetBinaryMode(UART_HandleTypeDef *huart)
 {
   uint8_t resp[2];
@@ -298,6 +332,15 @@ uint8_t HR_SetBinaryMode(UART_HandleTypeDef *huart)
   return 1; // shouldn't reach this
 }
 
+
+/*****************
+ * @brief Send a command to the HR4000
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @param command: pointer to the command to send
+ * @param length: length of the command
+ * @param wait_time: time to wait for a response
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_SendCommand(UART_HandleTypeDef *huart, uint8_t *command, size_t length, uint16_t wait_time)
 {
   uint8_t resp = 0;
@@ -329,6 +372,13 @@ uint8_t HR_SendCommand(UART_HandleTypeDef *huart, uint8_t *command, size_t lengt
   return 1; // shouldn't reach this
 }
 
+
+/*****************
+ * @brief Set the integration time of the HR4000
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @param time_ms: integration time in ms
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_SetIntegrationTime(UART_HandleTypeDef *huart, uint16_t time_ms)
 {
   if (time_ms > 65000)
@@ -342,6 +392,13 @@ uint8_t HR_SetIntegrationTime(UART_HandleTypeDef *huart, uint16_t time_ms)
   return HR_SendCommand(huart, command, 3, 65000);
 }
 
+
+/*****************
+ * @brief Set the scan summation of the HR4000
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @param count: number of scans to sum
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_SetSumming(UART_HandleTypeDef *huart, uint8_t count)
 {
   if ((count < 1) | (count > 4))
@@ -354,6 +411,13 @@ uint8_t HR_SetSumming(UART_HandleTypeDef *huart, uint8_t count)
   return HR_SendCommand(huart, command, 3, 10);
 }
 
+
+/*****************
+ * @brief Set the smoothing of the HR4000
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @param count: number of scans to smooth
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_SetSmoothing(UART_HandleTypeDef *huart, uint8_t count)
 {
   if (count > 15)
@@ -366,6 +430,12 @@ uint8_t HR_SetSmoothing(UART_HandleTypeDef *huart, uint8_t count)
   return HR_SendCommand(huart, command, 3, 10);
 }
 
+
+/*****************
+ * @brief Clear the Memory of the HR4000
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_ClearMemory(UART_HandleTypeDef *huart)
 {
   uint8_t command[3] = { 0 };
@@ -376,6 +446,17 @@ uint8_t HR_ClearMemory(UART_HandleTypeDef *huart)
   return HR_SendCommand(huart, command, 1, 10);
 }
 
+
+/*****************
+ * @brief Set the trigger mode of the HR4000
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @param mode: trigger mode
+ * 0 = Normal (Continuous)
+ * 1 = external software trigger
+ * 2 = external Hardware trigger with auto-integration
+ * 3 = external Syncronization Trigger with auto-integration and auto-summing
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_SetTriggerMode(UART_HandleTypeDef *huart, uint8_t mode)
 {
   if (mode > 3)
@@ -388,6 +469,11 @@ uint8_t HR_SetTriggerMode(UART_HandleTypeDef *huart, uint8_t mode)
   return HR_SendCommand(huart, command, 3, 10);
 }
 
+/****************************
+ * @brief Trigger a spectra acquisition
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_TriggerSpectra(UART_HandleTypeDef *huart)
 {
   uint8_t buffer[20];
@@ -400,6 +486,14 @@ uint8_t HR_TriggerSpectra(UART_HandleTypeDef *huart)
 }
 
 
+/*****************
+ * @brief Set the checksum mode of the HR4000
+ * @param huart: pointer to the UART_HandleTypeDef struct
+ * @param state: checksum mode
+ * 0 = no checksum
+ * 1 = checksum
+ * @retval 0 if no error, 1 if error
+*/
 uint8_t HR_SetChecksumMode(UART_HandleTypeDef *huart, bool state)
 {
   uint8_t command[3] = { 0 };
@@ -409,7 +503,11 @@ uint8_t HR_SetChecksumMode(UART_HandleTypeDef *huart, bool state)
   return HR_SendCommand(huart, command, 3, 10);
 }
 
-
+/*****************
+ * @brief Analyze a Spectra From teh HR4000. Will print out the Min and Max and Average Values
+ * @param spectra: pointer to the sSpectra struct
+ * @retval 0 exposure good, 1 too many Hot pixels
+*/
 uint8_t HR_AnalyzeSpectra(struct sSpectra *spectra)
 {
   uint32_t dsum = 0;

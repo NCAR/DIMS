@@ -1,8 +1,10 @@
 /*
  * AT30TS74.c
- *
+ *  Implementation for the Temperature Sensor AT30TS74
  *  Created on: Aug 8, 2021
  *      Author: damonb
+ *  Edited By mjeffers
+ * 
  */
 
 /*
@@ -10,6 +12,13 @@
 
 #include "AT30TS74.h"
 
+/****
+ * @brief Initialize the AT30TS74 struct
+ * @param s: pointer to the struct
+ * @param interface: pointer to the I2C interface
+ * @param add: address of the sensor
+ * @retval None
+*/
 void AT30TS74_InitStruct(struct sAT30TS74* s, I2C_HandleTypeDef* interface, uint8_t add)
 {
   uint8_t i;
@@ -21,6 +30,12 @@ void AT30TS74_InitStruct(struct sAT30TS74* s, I2C_HandleTypeDef* interface, uint
     s->Data[i] = 0;
 }
 
+
+/****
+ * @brief Configure the AT30TS74
+ * @param s: pointer to the struct
+ * @retval None
+*/
 void AT30TS74_Configure(struct sAT30TS74* s)
 {
   uint8_t buffer [3] = {0};
@@ -33,6 +48,11 @@ void AT30TS74_Configure(struct sAT30TS74* s)
 }
 
 
+/****
+ * @brief Get the temperature from the AT30TS74
+ * @param s: pointer to the struct
+ * @retval None
+*/
 void AT30TS74_GetTemperature(struct sAT30TS74* s)
 {
   uint8_t i;

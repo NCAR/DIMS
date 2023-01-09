@@ -3,12 +3,19 @@
  *
  *  Created on: Apr 21, 2021
  *      Author: damonb
+ *     Edited by mjeffers
  */
 
 #include "defs.h"
 #include "GPS.h"
 #include "MS5607.h"
 
+
+/*******************
+ * @brief Initialize the registers to 0
+ * @param reg: pointer to the register array
+ * @param backreg: pointer to the backup register array
+*/
 void InitRegisters(uint32_t* reg, uint32_t* backreg)
 {
   int i;
@@ -19,6 +26,16 @@ void InitRegisters(uint32_t* reg, uint32_t* backreg)
   }
 }
 
+
+/*******************
+ * @brief Load the registers with the current values from the Different Structures
+ * @param reg: pointer to the register array
+ * @param backreg: pointer to the backup register array
+ * @param usebackupreg: pointer to the usebackupreg flag
+ * @param gps: pointer to the GPS Frame struct
+ * @param ms: pointer to the MS5607 struct
+ * @param state: pointer to the state struct of the System
+*/
 void LoadRegisters(uint32_t* reg, uint32_t* backreg, bool* usebackupreg, struct sGPSFrame* gps, struct sMS5607* ms, struct sState* state)
 {
   int i;
@@ -62,6 +79,13 @@ void LoadRegisters(uint32_t* reg, uint32_t* backreg, bool* usebackupreg, struct 
   *usebackupreg = false;
 }
 
+
+/************************
+ * @brief Process the I2C Command and set the Systems States accordingly
+ * @param packet: pointer to the I2C packet
+ * @param state: pointer to the state struct of the System
+ * @retval None
+*/
 void ProcessI2CCommand(uint8_t* packet, struct sState* state)
 {
   uint32_t val = (packet[1] << 24) | (packet[2] << 16) | (packet[3] << 8) | packet[4];

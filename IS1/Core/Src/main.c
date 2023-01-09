@@ -173,7 +173,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  //Initalize all of the Different Structures
   InitState(&State);
   InitGPSFrame(&GPSFrame);
   InitMS5607(&MS5607);
@@ -194,7 +194,7 @@ int main(void)
   AT30TS74_InitStruct(&AT30TS74_2, &hi2c2, 7);
 //  AT30TS74_InitStruct(&AT30TS74_3, &hi2c2, 6);
 //  AT30TS74_InitStruct(&AT30TS74_4, &hi2c2, 1);
-
+  //Initilize the HR4000
   HR_InitStruct(&HR4000);
 
   /* USER CODE END Init */

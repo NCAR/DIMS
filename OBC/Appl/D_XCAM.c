@@ -1,7 +1,10 @@
 /*
 Damon's Reference XCAM Implementation
 2021-08-24
+Edited by mjeffers@ucar.edu
+2022-07-26
 */
+
 #include "D_XCAM.h"
 #include "TaskMonitor.h"
 #include "EPS.h"
@@ -115,15 +118,11 @@ uint8_t D_XCAM_GetEntireImageSPI(){
 }
 
 
-
-
-
-
-
-
-
-
-
+/****************************************************************************
+ * @brief : This will pull The Entire Image Until the priority packets read 0 from the XCAM
+ * @return 1 if an error happened, 0 if everything went well
+ * @note : This is the Fast Version of the Function and Should primamrily be used
+ ****************************************************************************/
 uint8_t D_XCAM_GetEntireImageSPIFast(){
     uint16_t j;
     uint16_t i;
@@ -224,6 +223,11 @@ uint8_t D_XCAM_Initialize_XCAM(void){
     return 0;
 }
 
+
+/******************************************************************************
+ * @brief : This will turn on the EPSs Fast Charging Feature
+ * @retval: None
+ ****************************************************************************/
 void D_XCAM_Write_EPS_8_9_bit1(void){
   EPS_write(9, 1);
   EPS_write(8, 1);
@@ -233,9 +237,9 @@ void D_XCAM_Write_EPS_8_9_bit1(void){
 /****************************************************************
  * @brief : This will Create a header File for A given Image From the XCAM. Info Should include Time, Exposure Time, Parameter Output, XCAM Status, and Image Size.
  * @param : FileName : The Name of the File to Create
- * @param : Exposure :
  * @retval: (1) if it fails to create the header file
  *          (0) if it successfully creates the header file
+ * @note : This is is not currently being used but should be implemented to make a header file for each image
  *****************************************************************/
 uint8_t D_XCAM_Make_ImageHeader(char *filename){
     
@@ -336,7 +340,11 @@ void Adjust_Exposure(uint16_t setting){
     return;
 }
 
-
+/*******************************************************************************
+ * @brief  This is an example implementation of the D-XCAM driver.
+ * @param  None
+ * @retval None
+ * ****************************************************************************/
 void D_XCAM_Example(void){
 
   uint8_t D_XCAM_Status[22] = {0};
@@ -923,6 +931,12 @@ char * D_XCAM_GetParameter(uint8_t ID){
 }
 */
 
+/****************************************************************
+ * @brief : This will Set the CRC of a given packet
+ * @param data : pointer to the data to set the CRC of
+ * @param len : length of the data to set the CRC of
+ * @return void
+ */
 void D_XCAM_SetCRC(uint8_t* data, size_t len)
 // length of total packet including CRC
 {
@@ -946,7 +960,13 @@ bool D_XCAM_ValidateCRC(uint8_t* data, size_t len)
   return false;
 }
 
-
+/****************************************************************
+ * @brief : This will calculate the CRC of a given packet
+ * @param seed : seed for the CRC
+ * @param pBuffer : pointer to the data to calculate the CRC of
+ * @param length : length of the data to calculate the CRC of
+ * @return the CRC
+ */
 uint16_t D_XCAM_crc16(uint16_t seed, uint8_t *pBuffer, int length)
 {
   uint16_t crc_lut[256] = {
@@ -998,7 +1018,12 @@ uint16_t D_XCAM_crc16(uint16_t seed, uint8_t *pBuffer, int length)
   return crc;
 }
 
-
+/*********************************************************************
+ * @brief This function is used to send commands to the XCAM
+ * @param buffer: pointer to the buffer containing the command
+ * @param len: length of the command
+ * @return 0 if successful, otherwise returns the error code
+ ******/
 uint8_t D_XCAM_transmit(uint8_t *buffer, size_t len)
 {
   HAL_StatusTypeDef ret = HAL_ERROR;
@@ -1009,15 +1034,18 @@ uint8_t D_XCAM_transmit(uint8_t *buffer, size_t len)
   if (ret != HAL_OK)
   {
     fprintf(PAYLOAD,"\tXCAM_transmit return was NOT HAL_OK\n\r");
-//    fprintf(PAYLOAD, "\tAttempting to recover HAL");
-//    HAL_Recovery_Tree(ret);
-    //Jump to HAL recovery
     return ret;
   }
   return 0;
 }
 
-
+/****************************************
+ * @brief This function is used to receive data from the XCAM
+ * @param buffer: pointer to the buffer to store the data
+ * @param len: length of the data
+ * @param ack: true if ACK is required, false otherwise
+ * @return 0 if successful, otherwise returns the error code
+ ***************************************/
 uint8_t D_XCAM_receive(uint8_t *buffer, size_t len, bool ack)
 {
 //  fprintf(PAYLOAD, "\tXCAM_receive\n\r"); // this probably slows things down
@@ -1068,6 +1096,12 @@ uint8_t D_XCAM_receive(uint8_t *buffer, size_t len, bool ack)
 }
 
 
+/*********************************************************************
+ * @brief This function is wait for a certain amount of time. Used to allow the XCAM to execute commands
+ * @param numSeconds: number of seconds to wait
+ * @param verbose: true if you want to print out the number of seconds left, false otherwise
+ * @return 0 if successful, otherwise returns the error codes
+ ******/
 void D_XCAM_WaitSeconds(uint16_t numSeconds, bool verbose)
 {
   uint16_t ii;
@@ -1086,7 +1120,11 @@ void D_XCAM_WaitSeconds(uint16_t numSeconds, bool verbose)
 
 }
 
-
+/*****************************************
+ * @brief This function is used to check and see if there is an ACK lin a response
+ * @param buffer: pointer to the buffer containing the command
+ * @param len: length of the command
+ * ****************/
 void D_XCAM_PrintACKOrResponse(uint8_t *buffer, size_t len)
 {
   if ((len == 5) && (buffer[2] == 0x7e))

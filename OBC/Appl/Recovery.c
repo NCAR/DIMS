@@ -2,8 +2,14 @@
 #include "defs.h"
 #include "Recovery.h"
 #include "RunTime.h"
+/***************************************
+ * This files helps with the Recovery of the Different HAL systems of the OBC
+ * Author: mjeffers@ucar.edu
+*/
 
-
+/*************************
+ * @brief: This will reset the I2C and SPI ports
+*/
 void Recovery_HAL_Reset(void)
 {
     print("Reinit I2C\n\r");

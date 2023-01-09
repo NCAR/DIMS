@@ -1,8 +1,10 @@
 /*
  * sdfs.c
- *
+ * 
+ *  A library to handle all of the SD card Functions
  *  Created on: Jan 11, 2021
  *      Author: damonb
+ *      edited by mjeffers
  */
 
 #include "sdfs.h"
@@ -12,6 +14,11 @@
 
 FATFS FS;
 
+/**************
+ * @brief Find a Free Directory File name
+ * @param state: pointer to the state struct of the System
+ * @retval None
+*/
 void SDFS_FindNewDirectory(struct sState *state)
 {
   uint16_t num;
@@ -23,6 +30,11 @@ void SDFS_FindNewDirectory(struct sState *state)
   }
 }
 
+/**************
+ * @brief Make a Directory File
+ * @param path: pointer to the path of the directory
+ * @retval 0 if successful, 1 if not
+*/
 uint8_t SDFS_MakeDir(char path[])
 {
   FRESULT fres;
@@ -42,6 +54,13 @@ uint8_t SDFS_MakeDir(char path[])
   return 1;
 }
 
+
+/**************
+ * @brief Setup the File System
+ * @param state: pointer to the state struct of the System
+ * @param gps: pointer to the GPS Frame struct
+ * @retval None
+*/
 void SDFS_SetupFS(struct sState *state, struct sGPSFrame *gps)
 {
   state->CreatedFiles = 0;
@@ -58,6 +77,12 @@ void SDFS_SetupFS(struct sState *state, struct sGPSFrame *gps)
   SDFS_MakeDir(state->SpectraPath);
 }
 
+
+/**************
+ * @brief Make a new Directory based on the last dir name and increment
+ * @param state: pointer to the state struct of the System
+ * @retval None
+*/
 void SDFS_IncrementDirectory(struct sState *state)
 {
   state->CreatedFiles = 0;
@@ -69,6 +94,11 @@ void SDFS_IncrementDirectory(struct sState *state)
   SDFS_MakeDir(state->SpectraPath);
 }
 
+/**************
+ * @brief Power Cycle the SD Card
+ * @param None
+ * @retval None
+*/
 void SDFS_PowerCycle()
 {
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_SET); // power off SD card
@@ -77,6 +107,11 @@ void SDFS_PowerCycle()
   HAL_Delay(100);
 }
 
+/**************
+ * @brief Mount the SD Card
+ * @param None
+ * @retval 0 if successful, 1 if not
+*/
 uint8_t SDFS_Mount()
 {
   FATFS *pfs;
@@ -112,6 +147,14 @@ uint8_t SDFS_Mount()
   return 0;
 }
 
+
+/**************
+ * @brief Write the Spectra to the SD Card
+ * @param state: pointer to the state struct of the System
+ * @param spectra: pointer to the Spectra struct
+ * @param gps: pointer to the GPS Frame struct
+ * @retval 0 if successful, 1 if not
+*/
 uint8_t SDFS_WriteSpectra(struct sState *state, struct sSpectra *spectra, struct sGPSFrame *gps)
 {
   uint16_t i, j;
@@ -160,6 +203,14 @@ uint8_t SDFS_WriteSpectra(struct sState *state, struct sSpectra *spectra, struct
   return 0;
 }
 
+
+/**************
+ * @brief Write the GPS Data to the SD Card
+ * @param state: pointer to the state struct of the System
+ * @param buffer: pointer to the buffer containing the string to write
+ * @param filename: pointer to the filename to write to
+ * @retval 0 if successful, 1 if not
+*/
 uint8_t SDFS_WriteString(struct sState *state, uint8_t* buffer, char* filename)
 {
   char fqpn[100];
@@ -183,6 +234,13 @@ uint8_t SDFS_WriteString(struct sState *state, uint8_t* buffer, char* filename)
   return 0;
 }
 
+
+/**************
+ * @brief Write the Envoirmental Data to the SD Card
+ * @param state: pointer to the state struct of the System
+ * @param gps: pointer to the GPS Frame struct
+ * @retval 0 if successful, 1 if not
+*/
 uint8_t SDFS_WriteEnvironmental(struct sState *state, struct sGPSFrame *gps)
 {
   if (gps->Date == 0)
@@ -218,6 +276,12 @@ uint8_t SDFS_WriteEnvironmental(struct sState *state, struct sGPSFrame *gps)
 }
 
 
+/**************
+ * @brief Write the GPS Data to the SD Card
+ * @param state: pointer to the state struct of the System
+ * @param gps: pointer to the GPS Frame struct
+ * @retval 0 if successful, 1 if not
+*/
 uint8_t SDFS_WriteCoords(struct sState *state, struct sGPSFrame *gps)
 {
   if (gps->Date == 0)
@@ -250,6 +314,13 @@ uint8_t SDFS_WriteCoords(struct sState *state, struct sGPSFrame *gps)
 }
 
 
+/**************
+ * @brief Write the Spectra Data to the SD Card
+ * @param state: pointer to the state struct of the System
+ * @param spectra: pointer to the Spectra struct
+ * @param gps: pointer to the GPS Frame struct
+ * @retval 0 if successful, 1 if not
+*/
 uint8_t SDFS_WriteSpectraBinary(struct sState *state, struct sSpectra *spectra, struct sGPSFrame *gps)
 {
   uint16_t i;

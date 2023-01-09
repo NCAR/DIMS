@@ -1,8 +1,9 @@
 /*
  * GPS.c
- *
+ *  This file contains the functions to process the GPS data
  *  Created on: Apr 21, 2021
  *      Author: damonb
+ *  Edited by mjeffers
  */
 
 #include "gps.h"
@@ -10,6 +11,12 @@
 #include <math.h>
 #include "funcs.h"
 
+
+/*******
+ * @brief This will Initialize the GPS Frame
+ * @param gps: pointer to the GPS Frame struct
+ * @retval None
+*/
 void InitGPSFrame(struct sGPSFrame* gps)
 {
 //  gps->TimeStr = 0;
@@ -37,7 +44,11 @@ void InitGPSFrame(struct sGPSFrame* gps)
 }
 
 
-
+/*********
+ * @brief This will parse the GPS data
+ * @param gps: pointer to the GPS Frame struct
+ * @retval 0 if successful, 1 if not
+*/
 uint8_t ProcessGPSFrame(struct sGPSFrame* gps)
 {
   double val, deg, min;

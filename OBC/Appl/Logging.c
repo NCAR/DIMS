@@ -2,7 +2,10 @@
 #include <time.h>
 #include "defs.h"
 
-
+/********
+ * This file helps with the Logging of the OBC
+ * Author: mjeffers@ucar.edu
+*/
 
 //Define Global
 char HouseKeepingName[10];

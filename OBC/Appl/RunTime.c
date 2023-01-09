@@ -4,8 +4,12 @@
 
 uint8_t Exposure = 0;
 
+
+//Check the Voltage of the EPS Battery
+//If the Battery Level is too low then the XCAM will be powered off to allow the EPS battery to recharge until it reaches a certain voltage level
 void CheckVoltage()
 {
+
     float Voltage = 0;
     TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
     EPS_getBattery_voltage(&Voltage);
@@ -14,10 +18,12 @@ void CheckVoltage()
     EPS_check(1,1);
     sprintf(buffer, "Current EPS Voltage: %.3f\n\r", Voltage);
     print(buffer);
+    //If the EPS battery Voltage is less than 3.6V then the XCAM will be powered off to allow the EPS battery to recharge
     if(Voltage<3.6){
         EPS_check(1,1);
         D_XCAM_Power_Off();
         EPS_check(1,1);
+        //While the Voltage is less than 3.9V the XCAM will wait for the EPS battery to recharge
         while(Voltage<3.9){
             print("Waiting For Battery to recharge.\r\n");
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
@@ -30,11 +36,20 @@ void CheckVoltage()
     }
 }
 
-
+//This Function will run the General Routine For the XCAM
+// This Includes:
+// 1. Powering off the XCAM ensuring it is in a known state
+// 2. Setting the Exposure
+// 3. Turing on the EPS fast Charge ability
+// 4. Setting up the SD Card
+// 5. Setting up the XCAM
+// 6. Adjust the Exposure
+// 7. Take the Picture
+// 8. Check the Battery level
+// 9. Repeat from step 6
 void XCAM_Run()
 {
     HAL_StatusTypeDef ret = HAL_ERROR;
-    uint8_t gps[34] = {0};
 
 
 
@@ -58,7 +73,7 @@ void XCAM_Run()
     EPS_check(1,1);
 
 
-    //Setup the SD Card <-- no you don't rename this thing
+    //Setup the SD Card
     if(Setup_SD()){
         print("Couldn't setup SD\r\n");
         //TO-DO Probably need to restart SD
@@ -75,29 +90,20 @@ void XCAM_Run()
         return;
     }
 
+    //How many images have we taken
     uint8_t total_captures = 0;
 
+    //While the total captures is less than 30
     while(++total_captures < 30)
     {
-        ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
-                                     gps, 32, 100);
-        char buffer[50] = {0};
-        sprintf(buffer, "GPS %s\r\n", gps);
-        print(buffer);
 
-        osDelay(9);
+        //Check the Battery Level
         CheckVoltage();
-        EPS_check(1,1);
 
-    while(++total_captures < 30)
-    {
-        ret = HAL_I2C_Master_Receive(&hi2c3, 70 << 1,
-                                     gps, 32, 100);
-        fprintf(PAYLOAD, "GPS %s\r\n", gps);
-        osDelay(9);
-        CheckVoltage();
         // set exposure time
         Adjust_Exposure(Exposures[Exposure]);
+
+        //Attempt to set the Imaging Made three times
         for (i=0; i<4; i++)
         {
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
@@ -108,32 +114,39 @@ void XCAM_Run()
             osDelay(1000);
             print("Trying again\r\n");
         }
+        //Exit if we couldnt set up the XCAM
         if (result != 0)
             return;
+
         //Write the Statuses To the HK and Ensure Everything is okay
         D_XCAM_GetStatus(D_XCAM_Status);
         D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
-
+        //Begin the Exposure
         D_XCAM_BeginExposure(); // begin capture
         TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
 
+        //Wait for the Exposure to complete as long as we dont go over 90 Seconds of waiting
         for (i=0; i<90; i++)
         {
+            //Analyse the Status of the XCAM and break if the image is complete
             if (D_XCAM_AnalyzeStatus(D_XCAM_Status,&packetsRemaining, &Error_Flag) & 0x02)
             {
                 print("Image Capture Complete Attempting to break Loop\r\n");
                 break;
             }
+            //Keep waiting for the image to complete
             print("Waiting for image...\r\n");
             osDelay(1000);    /* Give processing time for the other tasks */
+            //If we arent able to Check the Status
             if (D_XCAM_GetStatus(D_XCAM_Status))
             {
                 print("Error checking status.\r\n");
                 osDelay(1000);
             }
-//           D_XCAM_AnalyzeStatus(D_XCAM_Status, &packetsRemaining, &Error_Flag);
+
+            //Send an Alive signla to the OBC
             TaskMonitor_IamAlive(TASK_MONITOR_DEFAULT);
         }
 
@@ -143,6 +156,7 @@ void XCAM_Run()
         print(buffer);
         D_XCAM_SendInitOrUpdate(false, false);
         D_XCAM_GetEntireImageSPIFast();
+        //Go to the Next exposure
         Exposure++;
         if (Exposure > 4)
           Exposure = 0;

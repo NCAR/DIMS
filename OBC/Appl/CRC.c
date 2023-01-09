@@ -1,6 +1,9 @@
 #include "CRC.h"
+// This will encode and Decode CRC checks from XCAM
+// Author dburke@ucar.edu
+// Edited mjeffers@ucar.edu
 
-
+//This Function will take a buffer and return the CRC16
 uint16_t XCAM_crc16(uint16_t seed, uint8_t *pBuffer, int length)
 {
   uint16_t crc_lut[256] = {

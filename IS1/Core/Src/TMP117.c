@@ -1,6 +1,7 @@
 /*
  * TMP117.c
  *
+ *  A library to handle all of the TMP117 Functions
  *  Created on: Aug 8, 2021
  *      Author: damonb
  */
@@ -11,6 +12,14 @@
 #include "TMP117.h"
 #include "main.h"
 
+
+/****
+ * @brief Initialize the TMP117 structure
+ * @param s: pointer to the TMP117 structure
+ * @param interface: pointer to the I2C interface
+ * @param addpin: the address pin value
+ * @retval None
+*/
 void TMP117_InitStruct(struct sTMP117* s, I2C_HandleTypeDef* interface, uint8_t addpin)
 {
   /* addpin values define what the address pin is tied to:
@@ -31,6 +40,12 @@ void TMP117_InitStruct(struct sTMP117* s, I2C_HandleTypeDef* interface, uint8_t 
 
 }
 
+
+/****
+ * @brief Configure the TMP117
+ * @param s: pointer to the TMP117 structure
+ * @retval None
+*/
 void TMP117_Configure(struct sTMP117* s)
 {
   uint8_t buffer[3] = {0};
@@ -40,6 +55,12 @@ void TMP117_Configure(struct sTMP117* s)
   s->Configured = true;
 }
 
+
+/****
+ * @brief Get the temperature from the TMP117
+ * @param s: pointer to the TMP117 structure
+ * @retval None
+*/
 void TMP117_GetTemperature(struct sTMP117* s)
 {
   uint8_t i;
@@ -90,6 +111,12 @@ void TMP117_GetTemperature(struct sTMP117* s)
 
 
 
+
+/****
+ * @brief Set the I2C state
+ * @param s: true to enable, false to disable
+ * @retval None
+*/
 void I2C2_State(bool s)
 {
   hi2c2.Instance = I2C2;
